@@ -111,9 +111,8 @@ export default function AgendaPage() {
       subjectId: subjectId && subjectId !== "none" ? subjectId : undefined,
       date: new Date(date + "T12:00:00").toISOString(),
       type,
-      completed: false,
       scope
-    } as any)
+    })
     setIsModalOpen(false)
     setDuplicateWarning("")
   }

@@ -96,8 +96,9 @@ export default function RegisterPage() {
       })
       setAuth(data.token, data.user)
       router.push("/")
-    } catch (err: any) {
-      setError(err.message || "Falha ao criar conta. Tente novamente.")
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Falha ao criar conta. Tente novamente."
+      setError(message)
     } finally {
       setLoading(false)
     }

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Subject, Event, Note } from '@/types';
+import { Subject, Event, Note, StudentSubject, Scope } from '@/types';
 import { fetchApi } from '@/lib/api';
 import { useToastStore } from './toastStore';
 
@@ -17,14 +17,14 @@ interface StoreState {
 
   // Subjects
   fetchSubjects: () => Promise<void>;
-  addSubject: (subject: any) => Promise<void>;
-  updateSubject: (id: string, subject: Partial<Subject>) => Promise<void>;
+  addSubject: (subject: { name: string; professor: string; color: string; hours?: number; credits?: number; scope?: Scope }) => Promise<void>;
+  updateSubject: (id: string, subject: Partial<Subject> & { credits?: number }) => Promise<void>;
   deleteSubject: (id: string) => Promise<void>;
-  updateSubjectTracking: (id: string, tracking: any) => Promise<void>;
+  updateSubjectTracking: (id: string, tracking: Partial<StudentSubject>) => Promise<void>;
 
   // Events
   fetchEvents: () => Promise<void>;
-  addEvent: (event: any) => Promise<void>;
+  addEvent: (event: { title: string; date: string; type: Event['type']; subjectId?: string; scope?: Scope }) => Promise<void>;
   toggleEventCompletion: (id: string) => Promise<void>;
   deleteEvent: (id: string) => Promise<void>;
 
@@ -51,8 +51,9 @@ export const useStore = create<StoreState>((set, get) => ({
         fetchApi('/notes')
       ]);
       set({ subjects, events, notes, loading: false });
-    } catch (error: any) {
-      set({ error: error.message, loading: false });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error occurred';
+      set({ error: message, loading: false });
     }
   },
 
@@ -70,7 +71,7 @@ export const useStore = create<StoreState>((set, get) => ({
         professor: subject.professor,
         color: subject.color,
         hours: subject.hours || subject.credits || 60,
-        scope: (subject as any).scope || 'INDIVIDUAL'
+        scope: subject.scope || 'INDIVIDUAL'
       };
       const newSubject = await fetchApi('/subjects', {
         method: 'POST',
@@ -78,8 +79,9 @@ export const useStore = create<StoreState>((set, get) => ({
       });
       set((state) => ({ subjects: [...state.subjects, newSubject] }));
       toast()('Matéria criada com sucesso!', 'success');
-    } catch (err: any) {
-      toast()(err.message || 'Erro ao criar matéria', 'error');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao criar matéria';
+      toast()(message, 'error');
       console.error(err);
     }
   },
@@ -90,7 +92,7 @@ export const useStore = create<StoreState>((set, get) => ({
         name: subject.name,
         professor: subject.professor,
         color: subject.color,
-        hours: (subject as any).hours || (subject as any).credits || 60,
+        hours: subject.hours || subject.credits || 60,
       };
       const updated = await fetchApi(`/subjects/${id}`, {
         method: 'PUT',
@@ -100,8 +102,9 @@ export const useStore = create<StoreState>((set, get) => ({
         subjects: state.subjects.map(s => s.id === id ? { ...s, ...updated } : s)
       }));
       toast()('Matéria atualizada!', 'success');
-    } catch (err: any) {
-      toast()(err.message || 'Erro ao atualizar matéria', 'error');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao atualizar matéria';
+      toast()(message, 'error');
       console.error(err);
     }
   },
@@ -111,8 +114,9 @@ export const useStore = create<StoreState>((set, get) => ({
       await fetchApi(`/subjects/${id}`, { method: 'DELETE' });
       set((state) => ({ subjects: state.subjects.filter(s => s.id !== id) }));
       toast()('Matéria removida', 'success');
-    } catch (err: any) {
-      toast()(err.message || 'Erro ao remover matéria', 'error');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao remover matéria';
+      toast()(message, 'error');
       console.error(err);
     }
   },
@@ -132,8 +136,9 @@ export const useStore = create<StoreState>((set, get) => ({
         })
       }));
       toast()('Notas salvas!', 'success');
-    } catch (err: any) {
-      toast()(err.message || 'Erro ao salvar notas', 'error');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao salvar notas';
+      toast()(message, 'error');
       console.error(err);
     }
   },
@@ -152,7 +157,7 @@ export const useStore = create<StoreState>((set, get) => ({
         date: event.date,
         type: event.type,
         subjectId: event.subjectId,
-        scope: (event as any).scope || 'INDIVIDUAL'
+        scope: event.scope || 'INDIVIDUAL'
       };
       const newEvent = await fetchApi('/events', {
         method: 'POST',
@@ -160,8 +165,9 @@ export const useStore = create<StoreState>((set, get) => ({
       });
       set((state) => ({ events: [...state.events, newEvent] }));
       toast()('Evento criado!', 'success');
-    } catch (err: any) {
-      toast()(err.message || 'Erro ao criar evento', 'error');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao criar evento';
+      toast()(message, 'error');
       console.error(err);
     }
   },
@@ -179,8 +185,9 @@ export const useStore = create<StoreState>((set, get) => ({
       }));
       const msg = updated.completed ? 'Tarefa concluída ✓' : 'Tarefa desmarcada';
       toast()(msg, updated.completed ? 'success' : 'info');
-    } catch (err: any) {
-      toast()(err.message || 'Erro ao atualizar evento', 'error');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao atualizar evento';
+      toast()(message, 'error');
       console.error(err);
     }
   },
@@ -190,8 +197,9 @@ export const useStore = create<StoreState>((set, get) => ({
       await fetchApi(`/events/${id}`, { method: 'DELETE' });
       set((state) => ({ events: state.events.filter(e => e.id !== id) }));
       toast()('Evento removido', 'success');
-    } catch (err: any) {
-      toast()(err.message || 'Erro ao remover evento', 'error');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao remover evento';
+      toast()(message, 'error');
       console.error(err);
     }
   },
@@ -211,8 +219,9 @@ export const useStore = create<StoreState>((set, get) => ({
       });
       set((state) => ({ notes: [newNote, ...state.notes] }));
       toast()('Nota criada!', 'success');
-    } catch (err: any) {
-      toast()(err.message || 'Erro ao criar nota', 'error');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao criar nota';
+      toast()(message, 'error');
       console.error(err);
     }
   },
@@ -227,8 +236,9 @@ export const useStore = create<StoreState>((set, get) => ({
         notes: state.notes.map(n => n.id === id ? { ...n, ...updated } : n)
       }));
       toast()('Nota salva!', 'success');
-    } catch (err: any) {
-      toast()(err.message || 'Erro ao salvar nota', 'error');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao salvar nota';
+      toast()(message, 'error');
       console.error(err);
     }
   },
@@ -238,8 +248,9 @@ export const useStore = create<StoreState>((set, get) => ({
       await fetchApi(`/notes/${id}`, { method: 'DELETE' });
       set((state) => ({ notes: state.notes.filter(n => n.id !== id) }));
       toast()('Nota removida', 'success');
-    } catch (err: any) {
-      toast()(err.message || 'Erro ao remover nota', 'error');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao remover nota';
+      toast()(message, 'error');
       console.error(err);
     }
   },

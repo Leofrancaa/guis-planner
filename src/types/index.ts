@@ -4,15 +4,21 @@ export interface Subject {
   color: string;
   professor?: string;
   hours?: number;
-  studentSubjects?: {
-    absences: number;
-    av1: number | null;
-    av2: number | null;
-    av3: number | null;
-  }[];
+  studentSubjects?: StudentSubject[];
+}
+
+export interface StudentSubject {
+  id: string;
+  userId: string;
+  subjectId: string;
+  absences: number;
+  av1: number | null;
+  av2: number | null;
+  av3: number | null;
 }
 
 export type EventType = 'class' | 'exam' | 'assignment' | 'other';
+export type Scope = 'INDIVIDUAL' | 'CLASS';
 
 export interface Event {
   id: string;
@@ -22,6 +28,7 @@ export interface Event {
   type: EventType;
   completed: boolean;
   description?: string;
+  scope?: Scope;
 }
 
 export interface Note {

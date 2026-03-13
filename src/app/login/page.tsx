@@ -32,8 +32,9 @@ export default function LoginPage() {
       })
       setAuth(data.token, data.user)
       router.push("/")
-    } catch (err: any) {
-      setError(err.message || "Credenciais inválidas. Verifique e tente novamente.")
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Credenciais inválidas. Verifique e tente novamente."
+      setError(message)
     } finally {
       setLoading(false)
     }

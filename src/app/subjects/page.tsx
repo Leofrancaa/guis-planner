@@ -4,7 +4,7 @@ import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useStore } from "@/store/useStore"
 import { useAuthStore } from "@/store/authStore"
-import { Subject } from "@/types"
+import { Subject, StudentSubject } from "@/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Modal } from "@/components/ui/modal"
@@ -95,7 +95,7 @@ function AbsenceBar({ absences, maxAbsences, color }: { absences: number; maxAbs
   )
 }
 
-function calculateGradeStatus(tracking: any) {
+function calculateGradeStatus(tracking: StudentSubject | undefined) {
   if (!tracking) return { label: "Sem notas", icon: null, color: "text-muted-foreground", avg: null }
   const grades = [tracking.av1, tracking.av2, tracking.av3].filter((g): g is number => g !== null && g !== undefined)
   if (grades.length === 0) return { label: "Aguardando notas", icon: null, color: "text-muted-foreground", avg: null }
