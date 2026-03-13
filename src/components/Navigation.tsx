@@ -4,7 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
-import { Home, BookOpen, Calendar, StickyNote, LogOut, Bell, BellOff, Users, FileText, ShieldCheck, Github } from "lucide-react"
+import { Home, BookOpen, Calendar, StickyNote, LogOut, Bell, BellOff, Users, FileText, ShieldCheck, Github, MessageCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -18,6 +18,7 @@ const baseNavItems = [
   { name: "Dashboard", href: "/", icon: Home },
   { name: "Matérias", href: "/subjects", icon: BookOpen },
   { name: "Turmas", href: "/turmas", icon: Users },
+  { name: "Estudos", href: "/reunioes", icon: MessageCircle },
   { name: "Agenda", href: "/agenda", icon: Calendar },
   { name: "Notas", href: "/notes", icon: StickyNote },
   { name: "Materiais", href: "/materiais", icon: FileText },

@@ -16,7 +16,7 @@ import {
 import {
   Plus, BookOpen, Trash2, Edit2, Palette, Target,
   Calculator, AlertTriangle, CheckCircle2, TrendingUp, User, Users,
-  Lock, XCircle, Award, Minus
+  Lock, XCircle, Award, Minus, Star
 } from "lucide-react"
 
 const COLORS = [
@@ -594,11 +594,11 @@ export default function SubjectsPage() {
                 </AnimatePresence>
 
                 {/* Footer */}
-                <div className="px-5 pb-4 pt-3 border-t border-border/40 flex gap-2">
+                <div className="px-5 pb-4 pt-3 border-t border-border/40 flex flex-wrap gap-2">
                   <Button
                     variant="secondary"
                     size="sm"
-                    className="flex-1 text-xs gap-1.5 h-8"
+                    className="flex-1 text-xs gap-1.5 h-8 min-w-[80px]"
                     onClick={() => setGradeConfigSubject(subject)}
                   >
                     <Award className="w-3 h-3" /> Notas
@@ -606,11 +606,28 @@ export default function SubjectsPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="flex-1 text-xs gap-1.5 h-8"
+                    className="flex-1 text-xs gap-1.5 h-8 min-w-[80px]"
                     onClick={() => openTrackingModal(subject)}
                   >
                     <Target className="w-3 h-3" /> Faltas
                   </Button>
+                  {subject.professor && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-xs gap-1.5 h-8 mt-1 border-primary/20 hover:bg-primary/5 text-primary"
+                      onClick={() => {
+                        if (useAuthStore.getState().isPremium()) {
+                          // TODO: Abrir modal de avaliação
+                          alert("Funcionalidade Premium: Avaliação de Professor")
+                        } else {
+                          // PremiumGate já lida com isso se envolvermos o botão
+                        }
+                      }}
+                    >
+                      <Star className="w-3 h-3" /> Avaliar Professor
+                    </Button>
+                  )}
                 </div>
               </motion.div>
             )
