@@ -112,7 +112,7 @@ export function Navigation() {
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 z-50 w-full border-t bg-background/80 backdrop-blur-md pb-safe sm:hidden">
         <div className="flex justify-around items-center p-2 relative">
-          {navItems.slice(0, 5).map((item) => {
+          {navItems.slice(0, 4).map((item) => {
             const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
             return (
               <Link
@@ -135,6 +135,15 @@ export function Navigation() {
               </Link>
             )
           })}
+          
+          <button
+            onClick={handleLogout}
+            className="relative flex flex-col items-center justify-center p-2 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+          >
+            <LogOut className="h-6 w-6" />
+            <span className="text-[10px] font-medium mt-1">Sair</span>
+          </button>
+
           <div className="absolute top-[-3.5rem] right-4 bg-background/80 backdrop-blur-md rounded-full shadow-lg border">
             <ThemeToggle />
           </div>
