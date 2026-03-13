@@ -6,30 +6,82 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Users, Plus, Crown, LogIn, ChevronRight, AlertCircle, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+} from "@/components/ui/select"
 import { PremiumGate } from "@/components/ui/premium-gate"
 import { useClassGroupStore, ClassGroup } from "@/store/classGroupStore"
 import { useAuthStore } from "@/store/authStore"
 import Link from "next/link"
+import { Search } from "lucide-react"
+
+const COURSES = [
+  "Administração", "Agronomia", "Análise e Desenvolvimento de Sistemas", "Arquitetura e Urbanismo",
+  "Artes Visuais", "Biomedicina", "Ciência da Computação", "Ciências Biológicas", "Ciências Contábeis",
+  "Ciências Econômicas", "Comunicação Social", "Design", "Direito", "Educação Física", "Enfermagem",
+  "Engenharia Civil", "Engenharia de Alimentos", "Engenharia de Controle e Automação",
+  "Engenharia de Produção", "Engenharia de Software", "Engenharia Elétrica", "Engenharia Mecânica",
+  "Engenharia Química", "Estética e Cosmética", "Farmácia", "Filosofia", "Fisioterapia",
+  "Fonoaudiologia", "Gastronomia", "Gestão de Recursos Humanos", "Gestão Financeira", "Gestão Pública",
+  "História", "Jornalismo", "Letras", "Logística", "Marketing", "Matemática", "Medicina",
+  "Medicina Veterinária", "Moda", "Nutrição", "Odontologia", "Pedagogia", "Processos Gerenciais",
+  "Psicologia", "Publicidade e Propaganda", "Radiologia", "Relações Internacionais", "Serviço Social",
+  "Sistemas de Informação", "Teologia", "Turismo"
+].sort()
+
+const SEMESTERS = (() => {
+  const list = []
+  for (let y = 2022; y <= 2099; y++) {
+    list.push(`${y}.1`)
+    list.push(`${y}.2`)
+  }
+  return list
+})()
 
 function RequestModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
-  const [name, setName] = useState("")
+  const [course, setCourse] = useState("")
+  const [courseSearch, setCourseSearch] = useState("")
+  const [semester, setSemester] = useState("")
+  const [turn, setTurn] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [showCourseList, setShowCourseList] = useState(false)
+  const listRef = React.useRef<HTMLUListElement>(null)
+  
   const { user } = useAuthStore()
   const { requestClassGroup } = useClassGroupStore()
+
+  // Handle click outside to close course list
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (listRef.current && !listRef.current.contains(event.target as Node)) {
+        setShowCourseList(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  const filteredCourses = COURSES.filter(c => 
+    c.toLowerCase().includes(courseSearch.toLowerCase())
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
-    const regex = /^.+\s*-\s*.+\s*-\s*.+$/
-    if (!regex.test(name)) {
-      setError("Use o formato: Curso - Semestre - Turno (ex: ADS - 2º Semestre - Noturno)")
+    
+    if (!course || !semester || !turn) {
+      setError("Por favor, preencha todos os campos.")
       return
     }
+
     if (!user?.institutionId) {
       setError("Sua conta não tem instituição associada.")
       return
     }
+
+    const name = `${course} - ${semester} - ${turn}`
+    
     setLoading(true)
     try {
       await requestClassGroup(name, user.institutionId)
@@ -65,19 +117,86 @@ function RequestModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: 
             </div>
           )}
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Nome da turma</label>
-            <Input
-              required
-              placeholder="ADS - 2º Semestre - Noturno"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              className="bg-background/50"
-              autoFocus
-            />
-            <p className="text-xs text-muted-foreground">
-              Formato obrigatório: Curso - Semestre - Turno
-            </p>
+          {/* Curso Searchable */}
+          <div className="space-y-1.5 relative">
+            <label className="text-sm font-medium">Curso</label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar curso..."
+                value={course ? course : courseSearch}
+                onChange={e => {
+                  setCourseSearch(e.target.value)
+                  setCourse("")
+                  setShowCourseList(true)
+                }}
+                onFocus={() => setShowCourseList(true)}
+                className="bg-background/50 pl-9"
+              />
+            </div>
+            
+            <AnimatePresence>
+              {showCourseList && (
+                <motion.ul
+                  ref={listRef}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute z-[60] w-full mt-1 max-h-48 overflow-y-auto bg-popover border rounded-xl shadow-xl p-1 no-scrollbar"
+                >
+                  {filteredCourses.length > 0 ? (
+                    filteredCourses.map(c => (
+                      <li
+                        key={c}
+                        onClick={() => {
+                          setCourse(c)
+                          setCourseSearch("")
+                          setShowCourseList(false)
+                        }}
+                        className="px-3 py-2 text-sm hover:bg-accent rounded-lg cursor-pointer transition-colors"
+                      >
+                        {c}
+                      </li>
+                    ))
+                  ) : (
+                    <li className="px-3 py-2 text-sm text-muted-foreground">Nenhum curso encontrado</li>
+                  )}
+                </motion.ul>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            {/* Semestre */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Semestre</label>
+              <Select value={semester} onValueChange={setSemester}>
+                <SelectTrigger className="bg-background/50">
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <div className="max-h-48 overflow-y-auto">
+                    {SEMESTERS.map(s => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
+                  </div>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Turno */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Turno</label>
+              <Select value={turn} onValueChange={setTurn}>
+                <SelectTrigger className="bg-background/50">
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Diurno">Diurno</SelectItem>
+                  <SelectItem value="Noturno">Noturno</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="flex gap-2 pt-2">
