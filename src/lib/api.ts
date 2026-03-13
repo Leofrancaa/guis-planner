@@ -1,4 +1,4 @@
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://guis-planner-api-i84a.vercel.app/api';
 
 export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   // Try to get the token, handle client/server differences if necessary
