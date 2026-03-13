@@ -111,16 +111,16 @@ export function Navigation() {
     <>
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 z-50 w-full border-t bg-background/80 backdrop-blur-md pb-safe sm:hidden">
-        <div className="flex justify-around items-center p-2 relative">
-          {navItems.slice(0, 4).map((item) => {
+        <div className="flex items-center overflow-x-auto no-scrollbar p-2 relative gap-1">
+          {navItems.map((item) => {
             const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "relative flex flex-col items-center justify-center p-2 rounded-xl transition-colors",
-                  isActive ? "text-primary" : "text-muted-foreground hover:bg-muted/50"
+                  "relative flex flex-col items-center justify-center p-2 px-4 min-w-[72px] rounded-xl transition-colors",
+                  isActive ? "text-primary" : "text-muted-foreground"
                 )}
               >
                 {isActive && (
@@ -135,16 +135,18 @@ export function Navigation() {
               </Link>
             )
           })}
-          
+        </div>
+        
+        {/* Floating actions mobile */}
+        <div className="absolute top-[-3.5rem] right-4 flex gap-2 sm:hidden">
           <button
             onClick={handleLogout}
-            className="relative flex flex-col items-center justify-center p-2 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+            className="bg-background/80 backdrop-blur-md p-2.5 rounded-full shadow-lg border text-muted-foreground hover:text-destructive"
+            title="Sair"
           >
-            <LogOut className="h-6 w-6" />
-            <span className="text-[10px] font-medium mt-1">Sair</span>
+            <LogOut className="h-5 w-5" />
           </button>
-
-          <div className="absolute top-[-3.5rem] right-4 bg-background/80 backdrop-blur-md rounded-full shadow-lg border">
+          <div className="bg-background/80 backdrop-blur-md rounded-full shadow-lg border">
             <ThemeToggle />
           </div>
         </div>
