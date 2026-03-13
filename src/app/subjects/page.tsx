@@ -327,7 +327,7 @@ function GradeConfigModal({
 
 export default function SubjectsPage() {
   const { subjects, loading, addSubject, updateSubject, deleteSubject, fetchSubjects } = useStore()
-  const user = useAuthStore(state => state.user)
+  const { isPremium, user } = useAuthStore()
   const [mounted, setMounted] = React.useState(false)
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [isTrackingModalOpen, setIsTrackingModalOpen] = React.useState(false)
@@ -617,11 +617,11 @@ export default function SubjectsPage() {
                       size="sm"
                       className="w-full text-xs gap-1.5 h-8 mt-1 border-primary/20 hover:bg-primary/5 text-primary"
                       onClick={() => {
-                        if (useAuthStore.getState().isPremium()) {
+                        if (isPremium()) {
                           // TODO: Abrir modal de avaliação
-                          alert("Funcionalidade Premium: Avaliação de Professor")
+                          alert("Acessando Avaliação de Professor...")
                         } else {
-                          // PremiumGate já lida com isso se envolvermos o botão
+                          alert("A avaliação de professores é um recurso exclusivo Premium.")
                         }
                       }}
                     >
@@ -681,7 +681,7 @@ export default function SubjectsPage() {
                   <SelectItem value="INDIVIDUAL">Somente eu</SelectItem>
                   <SelectItem value="CLASS">
                     <span className="flex items-center gap-2">
-                      <Users className="w-3.5 h-3.5" /> Turma (Computação 9° Sem.)
+                      <Users className="w-3.5 h-3.5" /> Turma
                     </span>
                   </SelectItem>
                 </SelectContent>

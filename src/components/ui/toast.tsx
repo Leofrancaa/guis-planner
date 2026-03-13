@@ -11,11 +11,11 @@ const icons: Record<ToastType, React.ReactNode> = {
   info: <Info className="w-5 h-5 text-blue-500 shrink-0" />,
 };
 
-const borders: Record<ToastType, string> = {
-  success: 'border-l-4 border-emerald-500',
-  error: 'border-l-4 border-red-500',
-  warning: 'border-l-4 border-amber-500',
-  info: 'border-l-4 border-blue-500',
+const gradients: Record<ToastType, string> = {
+  success: 'from-emerald-500/10 to-emerald-500/5 border-emerald-500/20',
+  error: 'from-red-500/10 to-red-500/5 border-red-500/20',
+  warning: 'from-amber-500/10 to-amber-500/5 border-amber-500/20',
+  info: 'from-blue-500/10 to-blue-500/5 border-blue-500/20',
 };
 
 function ToastItem({ toast }: { toast: Toast }) {
@@ -24,17 +24,17 @@ function ToastItem({ toast }: { toast: Toast }) {
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, x: 60, scale: 0.9 }}
-      animate={{ opacity: 1, x: 0, scale: 1 }}
-      exit={{ opacity: 0, x: 60, scale: 0.9 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-      className={`flex items-start gap-3 p-4 rounded-xl bg-card/95 backdrop-blur-md shadow-2xl border border-border/50 min-w-[280px] max-w-[360px] ${borders[toast.type]}`}
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+      whileHover={{ scale: 1.02 }}
+      className={`flex items-start gap-3 p-4 rounded-2xl bg-gradient-to-br backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border min-w-[300px] max-w-[400px] ${gradients[toast.type]}`}
     >
-      {icons[toast.type]}
-      <p className="flex-1 text-sm font-medium text-foreground leading-snug">{toast.message}</p>
+      <div className="mt-0.5">{icons[toast.type]}</div>
+      <p className="flex-1 text-sm font-semibold text-foreground/90 leading-tight pr-2 pt-0.5">{toast.message}</p>
       <button
         onClick={() => removeToast(toast.id)}
-        className="text-muted-foreground hover:text-foreground transition-colors ml-1 mt-0.5"
+        className="text-muted-foreground/50 hover:text-foreground transition-all hover:bg-muted p-1 rounded-lg -mr-1 -mt-1"
       >
         <X className="w-4 h-4" />
       </button>

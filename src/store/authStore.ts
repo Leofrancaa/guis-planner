@@ -35,9 +35,12 @@ export const useAuthStore = create<AuthState>()(
       isPremium: () => {
         const user = get().user;
         if (!user) return false;
-        if (user.role === 'ADMIN') return true;
-        if (user.plan !== 'PREMIUM') return false;
-        if (user.premiumUntil === null) return true;
+        if (user.role?.toUpperCase() === 'ADMIN') return true;
+        
+        const plan = user.plan?.toUpperCase();
+        if (plan !== 'PREMIUM') return false;
+        
+        if (!user.premiumUntil) return true; // lifetime
         return new Date(user.premiumUntil) > new Date();
       },
 
