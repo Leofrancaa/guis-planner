@@ -19,14 +19,18 @@ const COURSES = [
   "Administração", "Agronomia", "Análise e Desenvolvimento de Sistemas", "Arquitetura e Urbanismo",
   "Artes Visuais", "Biomedicina", "Ciência da Computação", "Ciências Biológicas", "Ciências Contábeis",
   "Ciências Econômicas", "Comunicação Social", "Design", "Direito", "Educação Física", "Enfermagem",
-  "Engenharia Civil", "Engenharia de Alimentos", "Engenharia de Controle e Automação",
-  "Engenharia de Produção", "Engenharia de Software", "Engenharia Elétrica", "Engenharia Mecânica",
-  "Engenharia Química", "Estética e Cosmética", "Farmácia", "Filosofia", "Fisioterapia",
-  "Fonoaudiologia", "Gastronomia", "Gestão de Recursos Humanos", "Gestão Financeira", "Gestão Pública",
-  "História", "Jornalismo", "Letras", "Logística", "Marketing", "Matemática", "Medicina",
-  "Medicina Veterinária", "Moda", "Nutrição", "Odontologia", "Pedagogia", "Processos Gerenciais",
-  "Psicologia", "Publicidade e Propaganda", "Radiologia", "Relações Internacionais", "Serviço Social",
-  "Sistemas de Informação", "Teologia", "Turismo"
+  "Engenharia Aeronáutica", "Engenharia Ambiental", "Engenharia Biomédica", "Engenharia Civil",
+  "Engenharia de Alimentos", "Engenharia de Computação", "Engenharia de Controle e Automação",
+  "Engenharia de Materiais", "Engenharia de Minas", "Engenharia de Pesca", "Engenharia de Petróleo",
+  "Engenharia de Produção", "Engenharia de Software", "Engenharia de Telecomunicações",
+  "Engenharia Elétrica", "Engenharia Eletrônica", "Engenharia Física", "Engenharia Florestal",
+  "Engenharia Mecânica", "Engenharia Mecatrônica", "Engenharia Metalúrgica", "Engenharia Naval",
+  "Engenharia Nuclear", "Engenharia Química", "Estética e Cosmética", "Farmácia", "Filosofia",
+  "Fisioterapia", "Fonoaudiologia", "Gastronomia", "Gestão de Recursos Humanos", "Gestão Financeira",
+  "Gestão Pública", "História", "Jornalismo", "Letras", "Logística", "Marketing", "Matemática",
+  "Medicina", "Medicina Veterinária", "Moda", "Nutrição", "Odontologia", "Pedagogia",
+  "Processos Gerenciais", "Psicologia", "Publicidade e Propaganda", "Radiologia",
+  "Relações Internacionais", "Serviço Social", "Sistemas de Informação", "Teologia", "Turismo"
 ].sort()
 
 const SEMESTERS = (() => {
