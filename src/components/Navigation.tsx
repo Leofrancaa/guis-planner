@@ -4,19 +4,23 @@ import * as React from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
-import { Home, BookOpen, Calendar, StickyNote, LogOut, Bell, BellOff } from "lucide-react"
+import { Home, BookOpen, Calendar, StickyNote, LogOut, Bell, BellOff, Users, FileText, ShieldCheck, Github } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useAuthStore } from "@/store/authStore"
 import { isPushSupported, subscribeToPush, unsubscribeFromPush, isSubscribed } from "@/lib/push"
 import { useToastStore } from "@/store/toastStore"
+import { NotificationBell } from "@/components/NotificationBell"
+import { PremiumBadge } from "@/components/PremiumBadge"
 
-const navItems = [
+const baseNavItems = [
   { name: "Dashboard", href: "/", icon: Home },
   { name: "Matérias", href: "/subjects", icon: BookOpen },
+  { name: "Turmas", href: "/turmas", icon: Users },
   { name: "Agenda", href: "/agenda", icon: Calendar },
   { name: "Notas", href: "/notes", icon: StickyNote },
+  { name: "Materiais", href: "/materiais", icon: FileText },
 ]
 
 function UserAvatar({ name }: { name?: string | null }) {
@@ -30,7 +34,7 @@ function UserAvatar({ name }: { name?: string | null }) {
   )
 }
 
-function BellButton() {
+function PushBellButton() {
   const [subscribed, setSubscribed] = React.useState(false)
   const [loading, setLoading] = React.useState(false)
   const addToast = useToastStore(state => state.addToast)
@@ -93,6 +97,11 @@ export function Navigation() {
 
   if (pathname === "/login" || pathname === "/register") return null
 
+  const isAdmin = user?.role === "ADMIN"
+  const navItems = isAdmin
+    ? [...baseNavItems, { name: "Admin", href: "/admin", icon: ShieldCheck }]
+    : baseNavItems
+
   const handleLogout = () => {
     logout()
     router.push("/login")
@@ -103,7 +112,7 @@ export function Navigation() {
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 z-50 w-full border-t bg-background/80 backdrop-blur-md pb-safe sm:hidden">
         <div className="flex justify-around items-center p-2 relative">
-          {navItems.map((item) => {
+          {navItems.slice(0, 5).map((item) => {
             const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
             return (
               <Link
@@ -150,7 +159,8 @@ export function Navigation() {
             </h1>
           </div>
           <div className="flex items-center gap-1">
-            <BellButton />
+            <NotificationBell />
+            <PushBellButton />
             <ThemeToggle />
           </div>
         </div>
@@ -160,9 +170,10 @@ export function Navigation() {
           <div className="px-4 py-4 border-b border-border/50">
             <div className="flex items-center gap-3">
               <UserAvatar name={user.name} />
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="font-semibold text-sm truncate">{user.name}</p>
                 <p className="text-xs text-muted-foreground truncate">@{user.username}</p>
+                <PremiumBadge className="mt-1" />
               </div>
             </div>
           </div>
@@ -195,8 +206,20 @@ export function Navigation() {
           })}
         </div>
 
-        {/* Logout */}
-        <div className="p-4 border-t border-border/50">
+        {/* Footer: Open source link + Logout */}
+        <div className="p-4 border-t border-border/50 space-y-1">
+          <Link
+            href="/contribuir"
+            className={cn(
+              "flex items-center gap-3 w-full rounded-xl px-4 py-2.5 text-sm transition-colors",
+              pathname === "/contribuir"
+                ? "text-primary font-medium"
+                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+            )}
+          >
+            <Github className="h-4 w-4 shrink-0" />
+            <span>Contribuir</span>
+          </Link>
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 w-full rounded-xl px-4 py-2.5 text-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"

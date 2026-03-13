@@ -1,10 +1,34 @@
+export type EnrollmentStatus = 'ENROLLED' | 'APPROVED' | 'FAILED' | 'LOCKED';
+export type SubjectClassStatus = 'ACTIVE' | 'COMPLETED';
+
+export interface GradeConfig {
+  id: string;
+  label: string;
+  weight: number;
+  order: number;
+  grade: number | null;
+}
+
+export interface Enrollment {
+  id: string;
+  userId: string;
+  subjectId: string;
+  status: EnrollmentStatus;
+  gradeConfigs?: GradeConfig[];
+}
+
 export interface Subject {
   id: string;
   name: string;
   color: string;
   professor?: string;
   hours?: number;
+  code?: string | null;
+  classStatus?: SubjectClassStatus;
+  classGroupId?: string | null;
+  classGroup?: { id: string; name: string } | null;
   studentSubjects?: StudentSubject[];
+  enrollments?: Enrollment[];
 }
 
 export interface StudentSubject {
@@ -15,6 +39,7 @@ export interface StudentSubject {
   av1: number | null;
   av2: number | null;
   av3: number | null;
+  enrollmentStatus?: EnrollmentStatus;
 }
 
 export type EventType = 'class' | 'exam' | 'assignment' | 'other';

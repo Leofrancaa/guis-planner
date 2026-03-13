@@ -11,14 +11,25 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select"
 import Image from "next/image"
-import { AlertCircle, UserPlus, AtSign } from "lucide-react"
+import { AlertCircle, UserPlus, AtSign, ChevronDown, ChevronUp, CheckSquare, Square } from "lucide-react"
 import { fetchApi } from "@/lib/api"
 import { useAuthStore } from "@/store/authStore"
 
-interface ClassGroup {
+interface Institution {
   id: string
   name: string
 }
+
+const TERMS = [
+  "A equipe Guis-Planner não se responsabiliza pela veracidade das avaliações de professores feitas pelos usuários.",
+  "A plataforma apenas armazena e exibe as informações fornecidas pelos próprios usuários.",
+  "Todo material enviado passa por validação da equipe antes de ser disponibilizado para outros usuários.",
+  "Toda solicitação de criação de turma passa por aprovação da equipe administrativa.",
+  "O benefício de 1 mês grátis de plano Premium por criar uma turma é concedido apenas uma vez por usuário.",
+  "Comportamentos inadequados de membros podem ser reportados pelo líder da turma à equipe administrativa.",
+  "Autorizo a coleta e o tratamento dos meus dados conforme a Lei Geral de Proteção de Dados (LGPD).",
+  "Estou ciente de que posso solicitar a exclusão da minha conta e dos meus dados a qualquer momento.",
+]
 
 // "João da Silva" → "joao.silva"
 function suggestUsername(fullName: string): string {
@@ -44,8 +55,10 @@ export default function RegisterPage() {
   const [usernameEdited, setUsernameEdited] = useState(false)
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [classGroupId, setClassGroupId] = useState("")
-  const [classes, setClasses] = useState<ClassGroup[]>([])
+  const [institutionId, setInstitutionId] = useState("")
+  const [institutions, setInstitutions] = useState<Institution[]>([])
+  const [termsOpen, setTermsOpen] = useState(false)
+  const [checkedTerms, setCheckedTerms] = useState<boolean[]>(Array(TERMS.length).fill(false))
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -53,7 +66,7 @@ export default function RegisterPage() {
   const setAuth = useAuthStore(state => state.setAuth)
 
   useEffect(() => {
-    fetchApi("/auth/classes").then(setClasses).catch(() => {})
+    fetchApi("/institutions").then(setInstitutions).catch(() => {})
   }, [])
 
   // Auto-suggest username from full name unless manually edited
@@ -68,6 +81,16 @@ export default function RegisterPage() {
     setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9.]/g, ""))
   }
 
+  const toggleTerm = (index: number) => {
+    setCheckedTerms(prev => {
+      const next = [...prev]
+      next[index] = !next[index]
+      return next
+    })
+  }
+
+  const allTermsChecked = checkedTerms.every(Boolean)
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
@@ -77,22 +100,36 @@ export default function RegisterPage() {
       return
     }
 
+    if (username.endsWith(".admin")) {
+      setError("Usuário inválido.")
+      return
+    }
+
     if (password !== confirmPassword) {
       setError("As senhas não coincidem.")
       return
     }
 
-    if (password.length < 6) {
-      setError("A senha deve ter pelo menos 6 caracteres.")
+    if (password.length < 8) {
+      setError("A senha deve ter pelo menos 8 caracteres.")
+      return
+    }
+
+    if (!institutionId) {
+      setError("Selecione sua instituição de ensino.")
+      return
+    }
+
+    if (!allTermsChecked) {
+      setError("Você deve aceitar todos os termos para continuar.")
       return
     }
 
     setLoading(true)
     try {
-      const resolvedClassGroupId = classGroupId && classGroupId !== "none" ? classGroupId : undefined
       const data = await fetchApi("/auth/register", {
         method: "POST",
-        body: JSON.stringify({ name, username, password, classGroupId: resolvedClassGroupId }),
+        body: JSON.stringify({ name, username, password, institutionId, termsAccepted: true }),
       })
       setAuth(data.token, data.user)
       router.push("/")
@@ -192,7 +229,7 @@ export default function RegisterPage() {
                 <Input
                   type="password"
                   required
-                  minLength={6}
+                  minLength={8}
                   placeholder="••••••••"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
@@ -212,34 +249,75 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {classes.length > 0 && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  Turma <span className="text-muted-foreground text-xs font-normal">(opcional)</span>
-                </label>
-                <Select value={classGroupId} onValueChange={setClassGroupId}>
-                  <SelectTrigger className="bg-background/50">
-                    <SelectValue placeholder="Selecione sua turma..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Sem turma</SelectItem>
-                    {classes.map(c => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {classGroupId && classGroupId !== "none" && (
-                  <p className="text-xs text-muted-foreground">
-                    Provas e matérias da turma serão visíveis para todos os membros.
-                  </p>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Instituição de Ensino</label>
+              <Select value={institutionId} onValueChange={setInstitutionId}>
+                <SelectTrigger className="bg-background/50">
+                  <SelectValue placeholder="Selecione sua instituição..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {institutions.map(inst => (
+                    <SelectItem key={inst.id} value={inst.id}>{inst.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* LGPD Terms */}
+            <div className="rounded-xl border border-border/50 bg-background/30 overflow-hidden">
+              <button
+                type="button"
+                className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium hover:bg-accent/10 transition-colors"
+                onClick={() => setTermsOpen(v => !v)}
+              >
+                <span className="flex items-center gap-2">
+                  {allTermsChecked
+                    ? <CheckSquare className="w-4 h-4 text-green-500" />
+                    : <Square className="w-4 h-4 text-muted-foreground" />
+                  }
+                  Termos e Condições
+                  <span className="text-muted-foreground font-normal text-xs">
+                    ({checkedTerms.filter(Boolean).length}/{TERMS.length})
+                  </span>
+                </span>
+                {termsOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+
+              <AnimatePresence>
+                {termsOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-4 pb-4 space-y-3 border-t border-border/50 pt-3">
+                      {TERMS.map((term, i) => (
+                        <label key={i} className="flex items-start gap-3 cursor-pointer group">
+                          <button
+                            type="button"
+                            onClick={() => toggleTerm(i)}
+                            className="shrink-0 mt-0.5"
+                          >
+                            {checkedTerms[i]
+                              ? <CheckSquare className="w-4 h-4 text-green-500" />
+                              : <Square className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                            }
+                          </button>
+                          <span className="text-xs text-muted-foreground leading-relaxed">{term}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </motion.div>
                 )}
-              </div>
-            )}
+              </AnimatePresence>
+            </div>
 
             <Button
               type="submit"
               className="w-full gap-2 shadow-lg bg-gradient-to-r from-accent to-primary hover:opacity-90"
-              disabled={loading || (!!username && !usernameValid)}
+              disabled={loading || (!!username && !usernameValid) || !allTermsChecked || !institutionId}
             >
               {loading ? (
                 <span className="flex items-center gap-2">

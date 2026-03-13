@@ -4,7 +4,8 @@ import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useStore } from "@/store/useStore"
 import { useAuthStore } from "@/store/authStore"
-import { Subject, StudentSubject } from "@/types"
+import { Subject, StudentSubject, GradeConfig, EnrollmentStatus } from "@/types"
+import { fetchApi } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Modal } from "@/components/ui/modal"
@@ -14,7 +15,8 @@ import {
 } from "@/components/ui/select"
 import {
   Plus, BookOpen, Trash2, Edit2, Palette, Target,
-  Calculator, AlertTriangle, CheckCircle2, TrendingUp, User, Users, GraduationCap, Save
+  Calculator, AlertTriangle, CheckCircle2, TrendingUp, User, Users, GraduationCap, Save,
+  Lock, XCircle, Award, Minus
 } from "lucide-react"
 
 const COLORS = [
@@ -112,6 +114,208 @@ function calculateGradeStatus(tracking: StudentSubject | undefined) {
   return { label: `Precisa ${neededAvg.toFixed(1)} na próxima`, icon: TrendingUp, color: "text-amber-500", avg }
 }
 
+const ENROLLMENT_STATUS_LABELS: Record<EnrollmentStatus, string> = {
+  ENROLLED: "Cursando",
+  APPROVED: "Aprovado",
+  FAILED: "Reprovado",
+  LOCKED: "Trancado",
+}
+
+const ENROLLMENT_STATUS_COLORS: Record<EnrollmentStatus, string> = {
+  ENROLLED: "text-blue-500 bg-blue-500/10",
+  APPROVED: "text-emerald-500 bg-emerald-500/10",
+  FAILED: "text-red-500 bg-red-500/10",
+  LOCKED: "text-muted-foreground bg-muted",
+}
+
+function EnrollmentBadge({ status }: { status: EnrollmentStatus }) {
+  return (
+    <span className={`inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full ${ENROLLMENT_STATUS_COLORS[status]}`}>
+      {ENROLLMENT_STATUS_LABELS[status]}
+    </span>
+  )
+}
+
+function GradeConfigModal({
+  subject,
+  onClose,
+}: {
+  subject: Subject
+  onClose: () => void
+}) {
+  const [configs, setConfigs] = React.useState<Array<{ label: string; weight: string; grade: string }>>([
+    { label: "AV1", weight: "33.4", grade: "" },
+    { label: "AV2", weight: "33.3", grade: "" },
+    { label: "AV3", weight: "33.3", grade: "" },
+  ])
+  const [loading, setLoading] = React.useState(true)
+  const [saving, setSaving] = React.useState(false)
+  const [error, setError] = React.useState("")
+  const [currentAverage, setCurrentAverage] = React.useState<number | null>(null)
+  const [neededForPass, setNeededForPass] = React.useState<number | null>(null)
+
+  React.useEffect(() => {
+    fetchApi(`/subjects/${subject.id}/grade-config`)
+      .then((data) => {
+        if (data.configs && data.configs.length > 0) {
+          setConfigs(data.configs.map((c: GradeConfig) => ({
+            label: c.label,
+            weight: c.weight.toString(),
+            grade: c.grade != null ? c.grade.toString() : "",
+          })))
+        }
+        setCurrentAverage(data.currentAverage)
+        setNeededForPass(data.neededForPass)
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [subject.id])
+
+  const totalWeight = configs.reduce((sum, c) => sum + (parseFloat(c.weight) || 0), 0)
+  const weightOk = Math.abs(totalWeight - 100) < 0.1
+
+  const addRow = () => setConfigs(prev => [...prev, { label: "", weight: "", grade: "" }])
+  const removeRow = (i: number) => setConfigs(prev => prev.filter((_, idx) => idx !== i))
+  const update = (i: number, field: "label" | "weight" | "grade", val: string) => {
+    setConfigs(prev => {
+      const next = [...prev]
+      next[i] = { ...next[i], [field]: val }
+      return next
+    })
+  }
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!weightOk) { setError("A soma dos pesos deve ser exatamente 100%."); return }
+    setSaving(true)
+    setError("")
+    try {
+      await fetchApi(`/subjects/${subject.id}/grade-config`, {
+        method: "PUT",
+        body: JSON.stringify({
+          configs: configs.map((c, i) => ({
+            label: c.label,
+            weight: parseFloat(c.weight),
+            order: i,
+            grade: c.grade ? parseFloat(c.grade) : null,
+          })),
+        }),
+      })
+      onClose()
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erro ao salvar.")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-card rounded-2xl p-6 w-full max-w-lg shadow-2xl border max-h-[90vh] overflow-y-auto"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-bold">Notas — {subject.name}</h2>
+            {currentAverage != null && (
+              <p className="text-sm text-muted-foreground">Média atual: <strong>{currentAverage.toFixed(1)}</strong></p>
+            )}
+          </div>
+          <button onClick={onClose} className="rounded-full p-1 hover:bg-muted/50">
+            <XCircle className="w-5 h-5" />
+          </button>
+        </div>
+
+        {neededForPass != null && (
+          <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-sm text-amber-600 dark:text-amber-400">
+            Você precisa de <strong>{neededForPass.toFixed(1)}</strong> na próxima avaliação para passar (média 7.0).
+          </div>
+        )}
+
+        {loading ? (
+          <div className="py-8 text-center text-sm text-muted-foreground">Carregando...</div>
+        ) : (
+          <form onSubmit={handleSave} className="space-y-4">
+            {error && (
+              <div className="text-sm text-destructive bg-destructive/10 rounded-xl px-3 py-2">{error}</div>
+            )}
+
+            <div className="space-y-2">
+              <div className="grid grid-cols-[1fr_80px_80px_32px] gap-2 text-xs text-muted-foreground px-1">
+                <span>Avaliação</span><span>Peso (%)</span><span>Nota</span><span />
+              </div>
+              {configs.map((c, i) => (
+                <div key={i} className="grid grid-cols-[1fr_80px_80px_32px] gap-2 items-center">
+                  <input
+                    className="rounded-lg border bg-background/50 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="AV1"
+                    value={c.label}
+                    onChange={e => update(i, "label", e.target.value)}
+                    required
+                  />
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0.1"
+                    max="100"
+                    className="rounded-lg border bg-background/50 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="33.3"
+                    value={c.weight}
+                    onChange={e => update(i, "weight", e.target.value)}
+                    required
+                  />
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="10"
+                    className="rounded-lg border bg-background/50 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="–"
+                    value={c.grade}
+                    onChange={e => update(i, "grade", e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeRow(i)}
+                    className="p-1 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={addRow}
+                className="text-xs text-primary hover:underline flex items-center gap-1"
+              >
+                <Plus className="w-3 h-3" /> Adicionar avaliação
+              </button>
+              <span className={`text-xs font-medium ${weightOk ? "text-emerald-500" : "text-amber-500"}`}>
+                Total: {totalWeight.toFixed(1)}%
+              </span>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button type="button" variant="outline" className="flex-1" onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button type="submit" className="flex-1" disabled={saving || !weightOk}>
+                {saving ? "Salvando..." : "Salvar Notas"}
+              </Button>
+            </div>
+          </form>
+        )}
+      </motion.div>
+    </div>
+  )
+}
+
 export default function SubjectsPage() {
   const { subjects, loading, addSubject, updateSubject, deleteSubject, fetchSubjects } = useStore()
   const user = useAuthStore(state => state.user)
@@ -119,6 +323,7 @@ export default function SubjectsPage() {
   const [mounted, setMounted] = React.useState(false)
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [isTrackingModalOpen, setIsTrackingModalOpen] = React.useState(false)
+  const [gradeConfigSubject, setGradeConfigSubject] = React.useState<Subject | null>(null)
   const [editingId, setEditingId] = React.useState<string | null>(null)
   const [trackingSubjectId, setTrackingSubjectId] = React.useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = React.useState<string | null>(null)
@@ -335,6 +540,24 @@ export default function SubjectsPage() {
                     </div>
                   </div>
 
+                  {/* Enrollment + class status badges */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {subject.classGroup && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                        <Users className="w-2.5 h-2.5" />
+                        {subject.classGroup.name}
+                      </span>
+                    )}
+                    {subject.classStatus === "COMPLETED" && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                        <Lock className="w-2.5 h-2.5" /> Concluída
+                      </span>
+                    )}
+                    {subject.enrollments?.[0]?.status && (
+                      <EnrollmentBadge status={subject.enrollments[0].status} />
+                    )}
+                  </div>
+
                   {/* Info row */}
                   {subject.hours && (
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -399,14 +622,22 @@ export default function SubjectsPage() {
                 </AnimatePresence>
 
                 {/* Footer */}
-                <div className="px-5 pb-4 pt-3 border-t border-border/40">
+                <div className="px-5 pb-4 pt-3 border-t border-border/40 flex gap-2">
                   <Button
                     variant="secondary"
                     size="sm"
-                    className="w-full text-xs gap-1.5 h-8"
+                    className="flex-1 text-xs gap-1.5 h-8"
+                    onClick={() => setGradeConfigSubject(subject)}
+                  >
+                    <Award className="w-3 h-3" /> Notas
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex-1 text-xs gap-1.5 h-8"
                     onClick={() => openTrackingModal(subject)}
                   >
-                    <Target className="w-3 h-3" /> Registrar Notas
+                    <Target className="w-3 h-3" /> Faltas
                   </Button>
                 </div>
               </motion.div>
@@ -496,6 +727,16 @@ export default function SubjectsPage() {
           </div>
         </form>
       </Modal>
+
+      {/* Grade Config Modal */}
+      <AnimatePresence>
+        {gradeConfigSubject && (
+          <GradeConfigModal
+            subject={gradeConfigSubject}
+            onClose={() => { setGradeConfigSubject(null); fetchSubjects() }}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Tracking Modal */}
       <Modal

@@ -1,13 +1,20 @@
+'use client';
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-interface User {
+export interface User {
   id: string;
   username: string;
   name: string;
-  role: string;
-  classGroupId?: string;
+  role: 'ADMIN' | 'STUDENT' | 'BANNED' | string;
+  classGroupId?: string | null;
   edag?: number | null;
+  plan: 'FREE' | 'PREMIUM';
+  premiumUntil: string | null;   // ISO string or null (null = no expiry)
+  institutionId: string | null;
+  points: number;
+  hasReceivedLeaderBonus: boolean;
 }
 
 interface AuthState {
@@ -17,6 +24,7 @@ interface AuthState {
   setAuth: (token: string, user: User) => void;
   setEdag: (edag: number | null) => void;
   logout: () => void;
+  isPremium: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -25,12 +33,23 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       user: null,
       isAuthenticated: false,
+
+      isPremium: () => {
+        const user = get().user;
+        if (!user) return false;
+        if (user.role === 'ADMIN') return true;
+        if (user.plan !== 'PREMIUM') return false;
+        if (user.premiumUntil === null) return true;
+        return new Date(user.premiumUntil) > new Date();
+      },
+
       setAuth: (token, user) => {
         if (typeof window !== 'undefined') {
           localStorage.setItem('token', token);
         }
         set({ token, user, isAuthenticated: true });
       },
+
       setEdag: async (edag) => {
         const token = get().token;
         if (!token) return;
@@ -45,6 +64,7 @@ export const useAuthStore = create<AuthState>()(
           console.error('Failed to save EDAG', err);
         }
       },
+
       logout: () => {
         if (typeof window !== 'undefined') {
           localStorage.removeItem('token');
