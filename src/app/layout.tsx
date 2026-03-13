@@ -38,6 +38,7 @@ export const metadata: Metadata = {
 import { Navigation } from "@/components/Navigation";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ToastContainer } from "@/components/ui/toast";
+import { HydrationGuard } from "@/components/HydrationGuard";
 
 export default function RootLayout({
   children,
@@ -55,16 +56,18 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="flex relative h-screen w-full overflow-hidden bg-background">
-            {/* Ambient Background Gradient Base */}
-            <div className="absolute inset-0 z-[-1] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-background to-background pointer-events-none"></div>
-            
-            <Navigation />
-            <main className="flex-1 overflow-y-auto pb-20 sm:pb-0 scroll-smooth relative z-10">
-              {children}
-            </main>
-          </div>
-          <ToastContainer />
+          <HydrationGuard>
+            <div className="flex relative h-screen w-full overflow-hidden bg-background">
+              {/* Ambient Background Gradient Base */}
+              <div className="absolute inset-0 z-[-1] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-background to-background pointer-events-none"></div>
+              
+              <Navigation />
+              <main className="flex-1 overflow-y-auto pb-20 sm:pb-0 scroll-smooth relative z-10">
+                {children}
+              </main>
+            </div>
+            <ToastContainer />
+          </HydrationGuard>
         </ThemeProvider>
       </body>
     </html>
