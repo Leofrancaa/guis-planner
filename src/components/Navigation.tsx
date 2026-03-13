@@ -111,7 +111,7 @@ export function Navigation() {
     <>
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 z-50 w-full border-t bg-background/80 backdrop-blur-md pb-safe sm:hidden">
-        <div className="flex items-center overflow-x-auto no-scrollbar p-2 relative gap-1">
+        <div className="flex items-center overflow-x-auto no-scrollbar p-2 relative gap-1 scroll-smooth">
           {navItems.map((item) => {
             const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
             return (
@@ -119,7 +119,7 @@ export function Navigation() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "relative flex flex-col items-center justify-center p-2 px-4 min-w-[72px] rounded-xl transition-colors",
+                  "relative flex flex-col items-center justify-center p-2 px-4 min-w-[80px] rounded-xl transition-colors",
                   isActive ? "text-primary" : "text-muted-foreground"
                 )}
               >
@@ -138,15 +138,15 @@ export function Navigation() {
         </div>
         
         {/* Floating actions mobile */}
-        <div className="absolute top-[-3.5rem] right-4 flex gap-2 sm:hidden">
+        <div className="absolute top-[-3.5rem] right-4 flex gap-2 sm:hidden items-center">
           <button
             onClick={handleLogout}
-            className="bg-background/80 backdrop-blur-md p-2.5 rounded-full shadow-lg border text-muted-foreground hover:text-destructive"
+            className="bg-background/80 backdrop-blur-md p-2.5 rounded-full shadow-lg border border-border/50 text-muted-foreground hover:text-destructive transition-all active:scale-95"
             title="Sair"
           >
             <LogOut className="h-5 w-5" />
           </button>
-          <div className="bg-background/80 backdrop-blur-md rounded-full shadow-lg border">
+          <div className="bg-background/80 backdrop-blur-md rounded-full shadow-lg border border-border/50">
             <ThemeToggle />
           </div>
         </div>
