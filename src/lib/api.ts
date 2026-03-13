@@ -3,17 +3,28 @@ export const API_BASE_URL = rawBaseUrl.endsWith('/api') ? rawBaseUrl : `${rawBas
 
 export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  // ... resto do código ...
+
+  let token = '';
+  if (typeof window !== 'undefined') {
+    token = localStorage.getItem('token') || '';
+  }
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const response = await fetch(`${API_BASE_URL}${cleanEndpoint}`, {
     ...options,
     headers,
   });
 
-  // Automatically handle 401 Unauthorized globally if desired
   if (response.status === 401 && typeof window !== 'undefined') {
     localStorage.removeItem('token');
-    // We could emit an event here or directly manipulate the store, 
-    // but redirecting to login is a common pattern.
     if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
         window.location.href = '/login';
     }
