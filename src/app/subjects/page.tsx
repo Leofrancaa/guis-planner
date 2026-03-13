@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select"
 import {
   Plus, BookOpen, Trash2, Edit2, Palette, Target,
-  Calculator, AlertTriangle, CheckCircle2, TrendingUp, User, Users, GraduationCap, Save,
+  Calculator, AlertTriangle, CheckCircle2, TrendingUp, User, Users,
   Lock, XCircle, Award, Minus
 } from "lucide-react"
 
@@ -97,21 +97,30 @@ function AbsenceBar({ absences, maxAbsences, color }: { absences: number; maxAbs
   )
 }
 
-function calculateGradeStatus(tracking: StudentSubject | undefined) {
-  if (!tracking) return { label: "Sem notas", icon: null, color: "text-muted-foreground", avg: null }
-  const grades = [tracking.av1, tracking.av2, tracking.av3].filter((g): g is number => g !== null && g !== undefined)
-  if (grades.length === 0) return { label: "Aguardando notas", icon: null, color: "text-muted-foreground", avg: null }
-  const sum = grades.reduce((a, b) => a + b, 0)
-  const avg = sum / grades.length
-  if (grades.length === 3) {
-    if (avg >= 7) return { label: `Aprovado (${avg.toFixed(1)})`, icon: CheckCircle2, color: "text-emerald-500", avg }
-    return { label: `Reprovado (${avg.toFixed(1)})`, icon: AlertTriangle, color: "text-red-500", avg }
+function calculateGradeStatus(subject: Subject) {
+  const configs = subject.enrollments?.[0]?.gradeConfigs || []
+  if (configs.length === 0) return { label: "Sem notas", icon: null, color: "text-muted-foreground", avg: null }
+  
+  const graded = configs.filter(c => c.grade !== null)
+  if (graded.length === 0) return { label: "Aguardando notas", icon: null, color: "text-muted-foreground", avg: null }
+
+  const gradedWeightSum = graded.reduce((sum, c) => sum + c.weight, 0)
+  const gradedScore = graded.reduce((sum, c) => sum + ((c.grade || 0) * c.weight / 100), 0)
+  const currentAverage = gradedWeightSum > 0 ? (gradedScore / (gradedWeightSum / 100)) : 0
+
+  if (graded.length === configs.length) {
+    if (currentAverage >= 7) return { label: `Aprovado (${currentAverage.toFixed(1)})`, icon: CheckCircle2, color: "text-emerald-500", avg: currentAverage }
+    return { label: `Reprovado (${currentAverage.toFixed(1)})`, icon: AlertTriangle, color: "text-red-500", avg: currentAverage }
   }
-  const pointsNeeded = 21 - sum
-  if (pointsNeeded <= 0) return { label: "Já aprovado!", icon: CheckCircle2, color: "text-emerald-500", avg }
-  const neededAvg = pointsNeeded / (3 - grades.length)
-  if (neededAvg > 10) return { label: "Trajetória de reprovação", icon: AlertTriangle, color: "text-red-500", avg }
-  return { label: `Precisa ${neededAvg.toFixed(1)} na próxima`, icon: TrendingUp, color: "text-amber-500", avg }
+
+  const remainingWeight = 100 - gradedWeightSum
+  const neededScore = 7.0 - gradedScore
+  const neededOnRemaining = (neededScore / (remainingWeight / 100))
+
+  if (neededOnRemaining <= 0) return { label: `Média atual: ${currentAverage.toFixed(1)} (Aprovado!)`, icon: CheckCircle2, color: "text-emerald-500", avg: currentAverage }
+  if (neededOnRemaining > 10) return { label: `Média: ${currentAverage.toFixed(1)} (Trajetória difícil)`, icon: AlertTriangle, color: "text-red-500", avg: currentAverage }
+  
+  return { label: `Precisa ${neededOnRemaining.toFixed(1)} na média restante`, icon: TrendingUp, color: "text-amber-500", avg: currentAverage }
 }
 
 const ENROLLMENT_STATUS_LABELS: Record<EnrollmentStatus, string> = {
@@ -449,9 +458,10 @@ export default function SubjectsPage() {
         >
           {subjects.map((subject) => {
             const tracking = subject.studentSubjects?.[0]
-            const gradeStatus = calculateGradeStatus(tracking)
+            const gradeStatus = calculateGradeStatus(subject)
             const GradeIcon = gradeStatus.icon
             const maxAbsences = subject.hours ? getMaxAbsences(subject.hours) : 0
+            const assessments = subject.enrollments?.[0]?.gradeConfigs || []
 
             return (
               <motion.div
@@ -525,10 +535,22 @@ export default function SubjectsPage() {
                     />
                   )}
 
-                  {/* Grade mini-bars */}
-                  {tracking && (
-                    <div className="space-y-2 pt-1">
-                      {[{ label: "AV1", val: tracking.av1 }, { label: "AV2", val: tracking.av2 }, { label: "AV3", val: tracking.av3 }].map(({ label, val }) => (
+                  {/* Grade bars (Dynamic or Legacy) */}
+                  <div className="space-y-2 pt-1">
+                    {assessments.length > 0 ? (
+                      assessments.map((config) => (
+                        <div key={config.id} className="flex items-center gap-2">
+                          <span className="text-[10px] text-muted-foreground w-10 shrink-0 truncate" title={config.label}>
+                            {config.label}
+                          </span>
+                          <GradeMiniBar value={config.grade} color={subject.color} />
+                          <span className="text-[10px] font-medium w-6 text-right shrink-0">
+                            {config.grade !== null && config.grade !== undefined ? config.grade.toFixed(1) : "–"}
+                          </span>
+                        </div>
+                      ))
+                    ) : tracking ? (
+                      [{ label: "AV1", val: tracking.av1 }, { label: "AV2", val: tracking.av2 }, { label: "AV3", val: tracking.av3 }].map(({ label, val }) => (
                         <div key={label} className="flex items-center gap-2">
                           <span className="text-[10px] text-muted-foreground w-6 shrink-0">{label}</span>
                           <GradeMiniBar value={val} color={subject.color} />
@@ -536,9 +558,9 @@ export default function SubjectsPage() {
                             {val !== null && val !== undefined ? val.toFixed(1) : "–"}
                           </span>
                         </div>
-                      ))}
-                    </div>
-                  )}
+                      ))
+                    ) : null}
+                  </div>
 
                   {/* Grade status */}
                   {gradeStatus.label !== "Sem notas" && (
