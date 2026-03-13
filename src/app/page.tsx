@@ -28,12 +28,6 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 300, damping: 25 } }
 }
 
-function getGreeting(name?: string | null) {
-  const hour = new Date().getHours()
-  const greet = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite"
-  return name ? `${greet}, ${name.split(" ")[0]}! 👋` : `${greet}!`
-}
-
 const EVENT_TYPE_COLORS: Record<string, string> = {
   exam: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
   assignment: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
@@ -46,10 +40,14 @@ export default function Dashboard() {
   const { user, isAuthenticated } = useAuthStore()
   const router = useRouter()
   const [mounted, setMounted] = React.useState(false)
+  const [greeting, setGreeting] = React.useState("")
 
   React.useEffect(() => {
     setMounted(true)
-  }, [])
+    const hour = new Date().getHours()
+    const greet = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite"
+    setGreeting(user?.name ? `${greet}, ${user.name.split(" ")[0]}! 👋` : `${greet}!`)
+  }, [user?.name])
 
   React.useEffect(() => {
     if (!mounted) return
@@ -116,7 +114,7 @@ export default function Dashboard() {
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-primary" />
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-            {getGreeting(user?.name)}
+            {greeting}
           </h1>
         </div>
         <p className="text-muted-foreground text-base">
