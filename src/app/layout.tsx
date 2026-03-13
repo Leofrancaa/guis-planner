@@ -31,6 +31,9 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "Guis Planner",
   },
+  other: {
+    "mobile-web-app-capable": "yes",
+  }
 };
 import { Navigation } from "@/components/Navigation";
 import { ThemeProvider } from "@/components/theme-provider";
