@@ -148,9 +148,9 @@ export function Navigation() {
         transition={{ duration: 0.3 }}
         className="hidden sm:flex flex-col h-screen w-64 border-r bg-card/50 backdrop-blur-xl shrink-0 sticky top-0 shadow-sm"
       >
-        {/* App title + actions */}
-        <div className="p-6 flex justify-between items-center border-b border-border/50">
-          <div className="flex items-center gap-2.5">
+        {/* App title */}
+        <div className="px-6 pt-5 pb-3 border-b border-border/50">
+          <div className="flex items-center gap-2.5 mb-3">
             <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0 ring-1 ring-primary/30 shadow-sm">
               <Image src="/unnamed.png" alt="Guis" width={36} height={36} className="object-cover w-full h-full" />
             </div>
