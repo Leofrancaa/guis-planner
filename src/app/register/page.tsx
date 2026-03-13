@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select"
+import Image from "next/image"
 import { AlertCircle, UserPlus, AtSign } from "lucide-react"
 import { fetchApi } from "@/lib/api"
 import { useAuthStore } from "@/store/authStore"
@@ -116,8 +117,15 @@ export default function RegisterPage() {
       >
         <div className="glass-card rounded-2xl p-8 shadow-2xl border-accent/20">
           <div className="text-center mb-8">
-            <div className="mx-auto w-14 h-14 bg-gradient-to-br from-accent to-primary rounded-2xl flex items-center justify-center text-white mb-4 shadow-lg font-black text-xl tracking-tight">
-              GP
+            <div className="mx-auto w-20 h-20 rounded-2xl overflow-hidden mb-4 shadow-lg ring-2 ring-accent/30">
+              <Image
+                src="/unnamed.png"
+                alt="Guis"
+                width={80}
+                height={80}
+                className="object-cover w-full h-full"
+                priority
+              />
             </div>
             <h1 className="text-3xl font-extrabold tracking-tight">Criar Conta</h1>
             <p className="text-muted-foreground mt-1.5 text-sm">Junte-se ao Guis Planner e organize seus estudos</p>

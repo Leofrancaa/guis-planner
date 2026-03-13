@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 import { format, isToday, isTomorrow, parseISO } from "date-fns"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -42,15 +43,24 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
 
 export default function Dashboard() {
   const { subjects, events, notes, loading, toggleEventCompletion, fetchAll } = useStore()
-  const user = useAuthStore((s) => s.user)
+  const { user, isAuthenticated } = useAuthStore()
+  const router = useRouter()
   const [mounted, setMounted] = React.useState(false)
 
   React.useEffect(() => {
     setMounted(true)
-    fetchAll()
-  }, [fetchAll])
+  }, [])
 
-  if (!mounted) return null
+  React.useEffect(() => {
+    if (!mounted) return
+    if (!isAuthenticated) {
+      router.replace("/login")
+      return
+    }
+    fetchAll()
+  }, [mounted, isAuthenticated, fetchAll, router])
+
+  if (!mounted || !isAuthenticated) return null
 
   const upcomingEvents = events
     .filter(ev => !ev.completed)

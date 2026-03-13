@@ -7,6 +7,7 @@ import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import Image from "next/image"
 import { AlertCircle, LogIn, AtSign } from "lucide-react"
 import { useAuthStore } from "@/store/authStore"
 import { fetchApi } from "@/lib/api"
@@ -51,8 +52,15 @@ export default function LoginPage() {
         <div className="glass-card rounded-2xl p-8 shadow-2xl border-primary/20">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="mx-auto w-14 h-14 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center text-white mb-4 shadow-lg font-black text-xl tracking-tight">
-              GP
+            <div className="mx-auto w-20 h-20 rounded-2xl overflow-hidden mb-4 shadow-lg ring-2 ring-primary/30">
+              <Image
+                src="/unnamed.png"
+                alt="Guis"
+                width={80}
+                height={80}
+                className="object-cover w-full h-full"
+                priority
+              />
             </div>
             <h1 className="text-3xl font-extrabold tracking-tight">Bem-vindo!</h1>
             <p className="text-muted-foreground mt-1.5 text-sm">Entre na sua conta do Guis Planner</p>

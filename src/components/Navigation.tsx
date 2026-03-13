@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import { Home, BookOpen, Calendar, StickyNote, LogOut, Bell, BellOff } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -141,8 +142,8 @@ export function Navigation() {
         {/* App title + actions */}
         <div className="p-6 flex justify-between items-center border-b border-border/50">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-black text-sm tracking-tight shrink-0">
-              GP
+            <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0 ring-1 ring-primary/30 shadow-sm">
+              <Image src="/unnamed.png" alt="Guis" width={36} height={36} className="object-cover w-full h-full" />
             </div>
             <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Guis Planner
