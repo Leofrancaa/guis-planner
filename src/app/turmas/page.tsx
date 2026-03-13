@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input"
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select"
-import { PremiumGate } from "@/components/ui/premium-gate"
 import { useClassGroupStore, ClassGroup } from "@/store/classGroupStore"
 import { useAuthStore } from "@/store/authStore"
 import Link from "next/link"
@@ -275,7 +274,6 @@ export default function TurmasPage() {
   const [showRequest, setShowRequest] = useState(false)
   const [successMsg, setSuccessMsg] = useState("")
   const { classGroups, loading, error, fetchClassGroups, joinClassGroup } = useClassGroupStore()
-  const { isPremium } = useAuthStore()
 
   useEffect(() => {
     fetchClassGroups()
