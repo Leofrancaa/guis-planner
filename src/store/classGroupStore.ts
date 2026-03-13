@@ -33,6 +33,7 @@ interface ClassGroupState {
   fetchMembers: (id: string) => Promise<void>
   joinClassGroup: (id: string) => Promise<void>
   leaveClassGroup: (id: string) => Promise<void>
+  createClassGroup: (name: string, institutionId: string) => Promise<void>
   requestClassGroup: (name: string, institutionId: string) => Promise<void>
   reportMember: (classGroupId: string, reportedUserId: string, reason: string) => Promise<void>
 }
@@ -79,6 +80,13 @@ export const useClassGroupStore = create<ClassGroupState>((set) => ({
 
   leaveClassGroup: async (id: string) => {
     await fetchApi(`/class-groups/${id}/leave`, { method: "DELETE" })
+  },
+
+  createClassGroup: async (name: string, institutionId: string) => {
+    await fetchApi("/class-groups", {
+      method: "POST",
+      body: JSON.stringify({ name, institutionId }),
+    })
   },
 
   requestClassGroup: async (name: string, institutionId: string) => {

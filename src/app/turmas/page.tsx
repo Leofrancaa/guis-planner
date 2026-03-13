@@ -53,7 +53,7 @@ function RequestModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: 
   const listRef = React.useRef<HTMLUListElement>(null)
   
   const { user } = useAuthStore()
-  const { requestClassGroup } = useClassGroupStore()
+  const { createClassGroup } = useClassGroupStore()
 
   // Handle click outside to close course list
   React.useEffect(() => {
@@ -88,11 +88,11 @@ function RequestModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: 
     
     setLoading(true)
     try {
-      await requestClassGroup(name, user.institutionId)
+      await createClassGroup(name, user.institutionId)
       onSuccess()
       onClose()
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Erro ao solicitar turma.")
+      setError(err instanceof Error ? err.message : "Erro ao criar turma.")
     } finally {
       setLoading(false)
     }
@@ -107,7 +107,7 @@ function RequestModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: 
         className="bg-card rounded-2xl p-6 w-full max-w-md shadow-2xl border"
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold">Solicitar Nova Turma</h2>
+          <h2 className="text-lg font-bold">Criar Nova Turma</h2>
           <button onClick={onClose} className="rounded-full p-1 hover:bg-muted/50 transition-colors">
             <X className="w-4 h-4" />
           </button>
@@ -287,7 +287,8 @@ export default function TurmasPage() {
   }
 
   const handleRequestSuccess = () => {
-    setSuccessMsg("Solicitação enviada! A equipe irá analisar em breve.")
+    setSuccessMsg("Turma criada com sucesso!")
+    fetchClassGroups()
     setTimeout(() => setSuccessMsg(""), 5000)
   }
 
@@ -298,17 +299,9 @@ export default function TurmasPage() {
           <h1 className="text-2xl font-bold">Turmas</h1>
           <p className="text-sm text-muted-foreground mt-1">Encontre e entre em turmas da sua instituição</p>
         </div>
-        {isPremium() ? (
-          <Button onClick={() => setShowRequest(true)} className="gap-2">
-            <Plus className="w-4 h-4" /> Solicitar Turma
-          </Button>
-        ) : (
-          <PremiumGate>
-            <Button className="gap-2">
-              <Plus className="w-4 h-4" /> Solicitar Turma
-            </Button>
-          </PremiumGate>
-        )}
+        <Button onClick={() => setShowRequest(true)} className="gap-2">
+          <Plus className="w-4 h-4" /> Criar Turma
+        </Button>
       </div>
 
       <AnimatePresence>
