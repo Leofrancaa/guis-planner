@@ -9,7 +9,6 @@ export interface User {
   name: string;
   role: 'ADMIN' | 'STUDENT' | 'BANNED' | string;
   classGroupId?: string | null;
-  edag?: number | null;
   plan: 'FREE' | 'PREMIUM';
   premiumUntil: string | null;   // ISO string or null (null = no expiry)
   institutionId: string | null;
@@ -22,7 +21,6 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   setAuth: (token: string, user: User) => void;
-  setEdag: (edag: number | null) => void;
   logout: () => void;
   isPremium: () => boolean;
 }
@@ -48,21 +46,6 @@ export const useAuthStore = create<AuthState>()(
           localStorage.setItem('token', token);
         }
         set({ token, user, isAuthenticated: true });
-      },
-
-      setEdag: async (edag) => {
-        const token = get().token;
-        if (!token) return;
-        try {
-          const { fetchApi } = await import('@/lib/api');
-          const updated = await fetchApi('/auth/edag', {
-            method: 'PUT',
-            body: JSON.stringify({ edag }),
-          });
-          set(state => ({ user: state.user ? { ...state.user, edag: updated.edag } : null }));
-        } catch (err) {
-          console.error('Failed to save EDAG', err);
-        }
       },
 
       logout: () => {

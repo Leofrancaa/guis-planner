@@ -319,7 +319,6 @@ function GradeConfigModal({
 export default function SubjectsPage() {
   const { subjects, loading, addSubject, updateSubject, deleteSubject, fetchSubjects } = useStore()
   const user = useAuthStore(state => state.user)
-  const setEdagStore = useAuthStore(state => state.setEdag)
   const [mounted, setMounted] = React.useState(false)
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [isTrackingModalOpen, setIsTrackingModalOpen] = React.useState(false)
@@ -327,10 +326,6 @@ export default function SubjectsPage() {
   const [editingId, setEditingId] = React.useState<string | null>(null)
   const [trackingSubjectId, setTrackingSubjectId] = React.useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = React.useState<string | null>(null)
-
-  // EDAG semestral widget
-  const [edagInput, setEdagInput] = React.useState("")
-  const [edagSaving, setEdagSaving] = React.useState(false)
 
   // Form state
   const [name, setName] = React.useState("")
@@ -349,10 +344,6 @@ export default function SubjectsPage() {
     setMounted(true)
     fetchSubjects()
   }, [fetchSubjects])
-
-  React.useEffect(() => {
-    if (user?.edag != null) setEdagInput(user.edag.toString())
-  }, [user?.edag])
 
   if (!mounted) return null
 
@@ -380,13 +371,6 @@ export default function SubjectsPage() {
     setAbsences(t?.absences?.toString() || "0")
     setTrackingSubjectId(subject.id)
     setIsTrackingModalOpen(true)
-  }
-
-  const handleSaveEdag = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setEdagSaving(true)
-    await setEdagStore(edagInput ? parseFloat(edagInput) : null)
-    setEdagSaving(false)
   }
 
   const handleSave = (e: React.FormEvent) => {
@@ -438,40 +422,6 @@ export default function SubjectsPage() {
           <Plus className="w-4 h-4" /> Nova Matéria
         </Button>
       </header>
-
-      {/* EDAG semestral widget */}
-      <div className="glass-card rounded-2xl p-5">
-        <form onSubmit={handleSaveEdag} className="flex flex-col sm:flex-row sm:items-end gap-4">
-          <div className="flex-1 space-y-1.5">
-            <label className="text-sm font-medium flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 text-primary" />
-              EDAG do Semestre
-              <span className="text-xs text-muted-foreground font-normal">
-                — Componente geral, independente das matérias
-              </span>
-            </label>
-            <Input
-              type="number"
-              step="0.1"
-              min="0"
-              max="10"
-              placeholder="0.0 – 10.0"
-              value={edagInput}
-              onChange={e => setEdagInput(e.target.value)}
-              className="max-w-[160px]"
-            />
-          </div>
-          <Button type="submit" disabled={edagSaving} size="sm" className="gap-2 shrink-0">
-            <Save className="w-3.5 h-3.5" />
-            {edagSaving ? "Salvando..." : "Salvar EDAG"}
-          </Button>
-          {user?.edag != null && (
-            <p className="text-xs text-muted-foreground sm:self-end pb-0.5">
-              Salvo: <strong>{user.edag.toFixed(1)}</strong>
-            </p>
-          )}
-        </form>
-      </div>
 
       {loading ? (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
