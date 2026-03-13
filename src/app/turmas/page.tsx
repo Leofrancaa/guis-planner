@@ -96,13 +96,10 @@ function RequestModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: 
 
 function ClassGroupCard({ group, onJoin }: { group: ClassGroup; onJoin: (id: string) => Promise<void> }) {
   const [joining, setJoining] = useState(false)
-  const [joined, setJoined] = useState(group.myRole != null)
-
   const handleJoin = async () => {
     setJoining(true)
     try {
       await onJoin(group.id)
-      setJoined(true)
     } catch {
       // error handled upstream
     } finally {

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { Crown, Search, AlertCircle } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
