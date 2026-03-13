@@ -61,22 +61,22 @@ function MaterialsContent() {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-3">
+      <div className="flex gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por matéria, professor ou curso..."
+            placeholder="Buscar matéria, professor ou curso..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="pl-9 bg-background/50"
           />
         </div>
         <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-44 bg-background/50">
+          <SelectTrigger className="w-[110px] sm:w-[160px] bg-background/50 shrink-0">
             <SelectValue placeholder="Tipo" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ALL">Todos os tipos</SelectItem>
+            <SelectItem value="ALL">Todos</SelectItem>
             <SelectItem value="EXAM">Provas</SelectItem>
             <SelectItem value="EXERCISE_LIST">Listas</SelectItem>
             <SelectItem value="SUMMARY">Resumos</SelectItem>
