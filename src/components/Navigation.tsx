@@ -138,7 +138,7 @@ export function Navigation() {
         </div>
         
         {/* Floating actions mobile */}
-        <div className="absolute top-[-3.5rem] right-4 flex gap-2 sm:hidden items-center">
+        <div className="absolute bottom-20 right-4 flex flex-col gap-2 sm:hidden items-center">
           <button
             onClick={handleLogout}
             className="bg-background/80 backdrop-blur-md p-2.5 rounded-full shadow-lg border border-border/50 text-muted-foreground hover:text-destructive transition-all active:scale-95"
