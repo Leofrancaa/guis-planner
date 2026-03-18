@@ -3,7 +3,7 @@
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useStore } from "@/store/useStore"
-import { useAuthStore } from "@/store/authStore"
+import { useClassGroupStore } from "@/store/classGroupStore"
 import { Event, EventType } from "@/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -35,7 +35,8 @@ const itemVariants = {
 
 export default function AgendaPage() {
   const { events, subjects, loading, addEvent, deleteEvent, toggleEventCompletion, fetchEvents, fetchSubjects } = useStore()
-  const user = useAuthStore(state => state.user)
+  const { classGroups, fetchClassGroups } = useClassGroupStore()
+  const isMember = classGroups.some(g => g.myRole != null)
   const [mounted, setMounted] = React.useState(false)
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState("")
@@ -54,7 +55,8 @@ export default function AgendaPage() {
     setMounted(true)
     fetchEvents()
     fetchSubjects()
-  }, [fetchEvents, fetchSubjects])
+    fetchClassGroups()
+  }, [fetchEvents, fetchSubjects, fetchClassGroups])
 
   if (!mounted) return null
 
@@ -407,8 +409,8 @@ export default function AgendaPage() {
             )
           })()}
 
-          {/* Scope selector: only for exam events when user belongs to a class */}
-          {type === "exam" && user?.classGroupId && (
+          {/* Scope selector: for any event when user belongs to a class */}
+          {isMember && (
             <div className="space-y-2">
               <label className="text-sm font-medium">Visibilidade</label>
               <Select value={scope} onValueChange={(v) => setScope(v as "INDIVIDUAL" | "CLASS")}>
