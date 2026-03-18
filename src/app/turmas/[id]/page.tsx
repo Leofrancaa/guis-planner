@@ -1,25 +1,27 @@
 "use client"
 
 import * as React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useParams } from "next/navigation"
-import { motion } from "framer-motion"
-import { Crown, Users, BookOpen, AlertTriangle, X, AlertCircle, GraduationCap } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Crown, Users, BookOpen, AlertTriangle, X, AlertCircle, GraduationCap, CheckCircle, LogOut, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useClassGroupStore, ClassGroupMember } from "@/store/classGroupStore"
 import { useAuthStore } from "@/store/authStore"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { fetchApi } from "@/lib/api"
+import { useToastStore } from "@/store/toastStore"
 
-interface ClassSubject {
+interface TurmaSubject {
   id: string
   name: string
   professor: string
   color: string
   hours: number
-  classGroupId?: string
   classStatus?: "ACTIVE" | "COMPLETED"
+  isEnrolled: boolean
+  enrollment?: { id: string; status: string } | null
 }
 
 type Tab = "subjects" | "members"
@@ -37,6 +39,7 @@ function ReportModal({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const { reportMember } = useClassGroupStore()
+  const addToast = useToastStore(state => state.addToast)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -47,6 +50,7 @@ function ReportModal({
     setLoading(true)
     try {
       await reportMember(classGroupId, member.userId, reason)
+      addToast("Denúncia enviada com sucesso.", "success")
       onClose()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erro ao enviar denúncia.")
@@ -110,25 +114,58 @@ export default function TurmaDetailPage() {
 
   const { currentGroup, members, loading, fetchGroup, fetchMembers } = useClassGroupStore()
   const { user } = useAuthStore()
-  const [subjects, setSubjects] = useState<ClassSubject[]>([])
+  const addToast = useToastStore(state => state.addToast)
+
+  const [subjects, setSubjects] = useState<TurmaSubject[]>([])
   const [subjectsLoading, setSubjectsLoading] = useState(false)
+  const [enrollingId, setEnrollingId] = useState<string | null>(null)
+
+  const loadSubjects = useCallback(async () => {
+    if (!id) return
+    setSubjectsLoading(true)
+    try {
+      const data = await fetchApi(`/class-groups/${id}/subjects`)
+      if (Array.isArray(data)) setSubjects(data)
+    } catch {
+      addToast("Erro ao carregar matérias.", "error")
+    } finally {
+      setSubjectsLoading(false)
+    }
+  }, [id, addToast])
 
   useEffect(() => {
     if (id) {
       fetchGroup(id)
       fetchMembers(id)
-      setSubjectsLoading(true)
-      fetchApi("/subjects")
-        .then((all: ClassSubject[]) => {
-          // The API already filters by membership; just filter for this turma
-          if (Array.isArray(all)) {
-            setSubjects(all.filter((s: ClassSubject) => s.classGroupId === id))
-          }
-        })
-        .catch(() => {})
-        .finally(() => setSubjectsLoading(false))
+      loadSubjects()
     }
-  }, [id, fetchGroup, fetchMembers])
+  }, [id, fetchGroup, fetchMembers, loadSubjects])
+
+  const handleEnroll = async (subjectId: string) => {
+    setEnrollingId(subjectId)
+    try {
+      await fetchApi(`/subjects/${subjectId}/enroll`, { method: "POST" })
+      addToast("Matrícula realizada! A matéria agora aparece em Matérias.", "success")
+      setSubjects(prev => prev.map(s => s.id === subjectId ? { ...s, isEnrolled: true } : s))
+    } catch (err: unknown) {
+      addToast(err instanceof Error ? err.message : "Erro ao se matricular.", "error")
+    } finally {
+      setEnrollingId(null)
+    }
+  }
+
+  const handleUnenroll = async (subjectId: string) => {
+    setEnrollingId(subjectId)
+    try {
+      await fetchApi(`/subjects/${subjectId}/enroll`, { method: "DELETE" })
+      addToast("Matrícula cancelada.", "info")
+      setSubjects(prev => prev.map(s => s.id === subjectId ? { ...s, isEnrolled: false, enrollment: null } : s))
+    } catch (err: unknown) {
+      addToast(err instanceof Error ? err.message : "Erro ao cancelar matrícula.", "error")
+    } finally {
+      setEnrollingId(null)
+    }
+  }
 
   const myRole = members.find(m => m.userId === user?.id)?.role ?? null
   const isLeader = myRole === "LEADER" || user?.role === "ADMIN"
@@ -192,20 +229,22 @@ export default function TurmaDetailPage() {
       {/* Subjects tab */}
       {tab === "subjects" && (
         <div className="space-y-3">
-          {isLeader && (
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">Matérias desta turma</p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Escolha as matérias que você vai cursar nesta turma.
+            </p>
+            {isLeader && (
               <Link href="/subjects">
                 <Button size="sm" variant="outline" className="gap-1">
-                  <BookOpen className="w-3.5 h-3.5" /> Gerenciar Matérias
+                  <BookOpen className="w-3.5 h-3.5" /> Gerenciar
                 </Button>
               </Link>
-            </div>
-          )}
+            )}
+          </div>
 
           {subjectsLoading ? (
             <div className="space-y-2">
-              {[1, 2, 3].map(i => <div key={i} className="h-14 bg-muted rounded-xl animate-pulse" />)}
+              {[1, 2, 3].map(i => <div key={i} className="h-16 bg-muted rounded-xl animate-pulse" />)}
             </div>
           ) : subjects.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">
@@ -218,16 +257,19 @@ export default function TurmaDetailPage() {
               )}
             </div>
           ) : (
-            <div className="space-y-2">
+            <AnimatePresence>
               {subjects.map(subject => (
                 <motion.div
                   key={subject.id}
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center gap-3 p-3 rounded-xl border bg-card"
+                  className={cn(
+                    "flex items-center gap-3 p-4 rounded-xl border bg-card transition-colors",
+                    subject.isEnrolled && "border-primary/30 bg-primary/5"
+                  )}
                 >
                   <div
-                    className="w-2.5 h-2.5 rounded-full shrink-0"
+                    className="w-3 h-3 rounded-full shrink-0"
                     style={{ backgroundColor: subject.color }}
                   />
                   <div className="flex-1 min-w-0">
@@ -235,18 +277,55 @@ export default function TurmaDetailPage() {
                     {subject.professor && (
                       <p className="text-xs text-muted-foreground truncate">{subject.professor}</p>
                     )}
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs text-muted-foreground">{subject.hours}h</span>
+                      {subject.classStatus === "COMPLETED" ? (
+                        <span className="text-xs px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">Concluída</span>
+                      ) : (
+                        <span className="text-xs px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">Ativa</span>
+                      )}
+                      {subject.isEnrolled && (
+                        <span className="text-xs px-1.5 py-0.5 rounded-full bg-primary/10 text-primary flex items-center gap-1">
+                          <CheckCircle className="w-2.5 h-2.5" /> Matriculado
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {subject.classStatus === "COMPLETED" ? (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">Concluída</span>
+                  <div className="shrink-0">
+                    {subject.classStatus === "COMPLETED" ? null : subject.isEnrolled ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1 text-muted-foreground hover:text-destructive hover:border-destructive/50"
+                        onClick={() => handleUnenroll(subject.id)}
+                        disabled={enrollingId === subject.id}
+                      >
+                        {enrollingId === subject.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <LogOut className="w-3.5 h-3.5" />
+                        )}
+                        Sair
+                      </Button>
                     ) : (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">Ativa</span>
+                      <Button
+                        size="sm"
+                        className="gap-1"
+                        onClick={() => handleEnroll(subject.id)}
+                        disabled={enrollingId === subject.id}
+                      >
+                        {enrollingId === subject.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <GraduationCap className="w-3.5 h-3.5" />
+                        )}
+                        Participar
+                      </Button>
                     )}
-                    <span className="text-xs text-muted-foreground">{subject.hours}h</span>
                   </div>
                 </motion.div>
               ))}
-            </div>
+            </AnimatePresence>
           )}
         </div>
       )}
