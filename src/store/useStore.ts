@@ -66,13 +66,14 @@ export const useStore = create<StoreState>((set, get) => ({
 
   addSubject: async (subject) => {
     try {
-      const payload = {
+      const payload: Record<string, unknown> = {
         name: subject.name,
         professor: subject.professor,
         color: subject.color,
         hours: subject.hours || subject.credits || 60,
-        scope: subject.scope || 'INDIVIDUAL'
+        scope: subject.scope || 'INDIVIDUAL',
       };
+      if (subject.classGroupId) payload.classGroupId = subject.classGroupId;
       const newSubject = await fetchApi('/subjects', {
         method: 'POST',
         body: JSON.stringify(payload)

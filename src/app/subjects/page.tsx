@@ -4,6 +4,7 @@ import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useStore } from "@/store/useStore"
 import { useAuthStore } from "@/store/authStore"
+import { useToastStore } from "@/store/toastStore"
 import { Subject, GradeConfig, EnrollmentStatus } from "@/types"
 import { fetchApi } from "@/lib/api"
 import { Button } from "@/components/ui/button"
@@ -330,6 +331,7 @@ interface LeaderGroup { id: string; name: string }
 export default function SubjectsPage() {
   const { subjects, loading, addSubject, updateSubject, deleteSubject, fetchSubjects } = useStore()
   const { isPremium } = useAuthStore()
+  const addToast = useToastStore(state => state.addToast)
   const [mounted, setMounted] = React.useState(false)
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [isTrackingModalOpen, setIsTrackingModalOpen] = React.useState(false)
@@ -637,10 +639,9 @@ export default function SubjectsPage() {
                       className="w-full text-xs gap-1.5 h-8 mt-1 border-primary/20 hover:bg-primary/5 text-primary"
                       onClick={() => {
                         if (isPremium()) {
-                          // TODO: Abrir modal de avaliação
-                          alert("Acessando Avaliação de Professor...")
+                          addToast("Avaliação de professores em breve!", "info")
                         } else {
-                          alert("A avaliação de professores é um recurso exclusivo Premium.")
+                          addToast("A avaliação de professores é exclusiva para usuários Premium.", "error")
                         }
                       }}
                     >
@@ -660,9 +661,10 @@ export default function SubjectsPage() {
                             method: "PUT",
                             body: JSON.stringify({ classGroupId: groupId }),
                           })
+                          addToast("Matéria movida para a turma com sucesso!", "success")
                           fetchSubjects()
                         } catch {
-                          alert("Erro ao mover matéria para a turma.")
+                          addToast("Erro ao mover matéria para a turma.", "error")
                         }
                       }}
                     >

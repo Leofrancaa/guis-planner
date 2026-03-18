@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Users, Plus, Crown, LogIn, ChevronRight, AlertCircle, X } from "lucide-react"
+import { Users, Plus, Crown, LogIn, ChevronRight, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select"
 import { useClassGroupStore, ClassGroup } from "@/store/classGroupStore"
 import { useAuthStore } from "@/store/authStore"
+import { useToastStore } from "@/store/toastStore"
 import Link from "next/link"
 import { Search } from "lucide-react"
 
@@ -53,6 +54,7 @@ function RequestModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: 
   
   const { user } = useAuthStore()
   const { createClassGroup } = useClassGroupStore()
+  const addToast = useToastStore(state => state.addToast)
 
   // Handle click outside to close course list
   React.useEffect(() => {
@@ -88,10 +90,13 @@ function RequestModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: 
     setLoading(true)
     try {
       await createClassGroup(name, user.institutionId)
+      addToast("Solicitação enviada! Aguarde aprovação dos administradores.", "success")
       onSuccess()
       onClose()
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Erro ao criar turma.")
+      const msg = err instanceof Error ? err.message : "Erro ao criar turma."
+      setError(msg)
+      addToast(msg, "error")
     } finally {
       setLoading(false)
     }
@@ -218,12 +223,14 @@ function RequestModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: 
 
 function ClassGroupCard({ group, onJoin }: { group: ClassGroup; onJoin: (id: string) => Promise<void> }) {
   const [joining, setJoining] = useState(false)
+  const addToast = useToastStore(state => state.addToast)
   const handleJoin = async () => {
     setJoining(true)
     try {
       await onJoin(group.id)
-    } catch {
-      // error handled upstream
+      addToast(`Você entrou na turma ${group.name}!`, "success")
+    } catch (err: unknown) {
+      addToast(err instanceof Error ? err.message : "Erro ao entrar na turma.", "error")
     } finally {
       setJoining(false)
     }
@@ -272,8 +279,8 @@ function ClassGroupCard({ group, onJoin }: { group: ClassGroup; onJoin: (id: str
 
 export default function TurmasPage() {
   const [showRequest, setShowRequest] = useState(false)
-  const [successMsg, setSuccessMsg] = useState("")
   const { classGroups, loading, error, fetchClassGroups, joinClassGroup } = useClassGroupStore()
+  const addToast = useToastStore(state => state.addToast)
 
   useEffect(() => {
     fetchClassGroups()
@@ -285,9 +292,8 @@ export default function TurmasPage() {
   }
 
   const handleRequestSuccess = () => {
-    setSuccessMsg("Turma criada com sucesso!")
+    addToast("Solicitação de turma enviada! Aguarde aprovação dos admins.", "success")
     fetchClassGroups()
-    setTimeout(() => setSuccessMsg(""), 5000)
   }
 
   return (
@@ -301,26 +307,6 @@ export default function TurmasPage() {
           <Plus className="w-4 h-4" /> Criar Turma
         </Button>
       </div>
-
-      <AnimatePresence>
-        {successMsg && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 rounded-xl px-4 py-3 text-sm"
-          >
-            {successMsg}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {error && (
-        <div className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 rounded-xl border border-destructive/20">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          {error}
-        </div>
-      )}
 
       {loading ? (
         <div className="space-y-3">
