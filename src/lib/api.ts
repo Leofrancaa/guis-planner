@@ -1,4 +1,4 @@
-const rawBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://guis-planner-api-i84a.vercel.app';
+const rawBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://guis-planner-api.vercel.app';
 export const API_BASE_URL = rawBaseUrl.endsWith('/api') ? rawBaseUrl : `${rawBaseUrl.replace(/\/$/, '')}/api`;
 
 export async function fetchApi(endpoint: string, options: RequestInit = {}) {
