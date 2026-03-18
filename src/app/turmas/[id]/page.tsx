@@ -4,12 +4,22 @@ import * as React from "react"
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import { motion } from "framer-motion"
-import { Crown, Users, BookOpen, AlertTriangle, X, AlertCircle } from "lucide-react"
+import { Crown, Users, BookOpen, AlertTriangle, X, AlertCircle, GraduationCap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useClassGroupStore, ClassGroupMember } from "@/store/classGroupStore"
 import { useAuthStore } from "@/store/authStore"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
+import { fetchApi } from "@/lib/api"
+
+interface ClassSubject {
+  id: string
+  name: string
+  professor: string
+  color: string
+  hours: number
+  classStatus?: "ACTIVE" | "COMPLETED"
+}
 
 type Tab = "subjects" | "members"
 
@@ -99,11 +109,23 @@ export default function TurmaDetailPage() {
 
   const { currentGroup, members, loading, fetchGroup, fetchMembers } = useClassGroupStore()
   const { user } = useAuthStore()
+  const [subjects, setSubjects] = useState<ClassSubject[]>([])
+  const [subjectsLoading, setSubjectsLoading] = useState(false)
 
   useEffect(() => {
     if (id) {
       fetchGroup(id)
       fetchMembers(id)
+      setSubjectsLoading(true)
+      fetchApi("/subjects")
+        .then((all: ClassSubject[]) => {
+          // The API already filters by membership; just filter for this turma
+          if (Array.isArray(all)) {
+            setSubjects(all.filter((s: any) => s.classGroupId === id))
+          }
+        })
+        .catch(() => {})
+        .finally(() => setSubjectsLoading(false))
     }
   }, [id, fetchGroup, fetchMembers])
 
@@ -169,12 +191,62 @@ export default function TurmaDetailPage() {
       {/* Subjects tab */}
       {tab === "subjects" && (
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">Matérias desta turma</p>
-            <Link href="/subjects">
-              <Button size="sm" variant="outline">Ver Matérias</Button>
-            </Link>
-          </div>
+          {isLeader && (
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">Matérias desta turma</p>
+              <Link href="/subjects">
+                <Button size="sm" variant="outline" className="gap-1">
+                  <BookOpen className="w-3.5 h-3.5" /> Gerenciar Matérias
+                </Button>
+              </Link>
+            </div>
+          )}
+
+          {subjectsLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map(i => <div key={i} className="h-14 bg-muted rounded-xl animate-pulse" />)}
+            </div>
+          ) : subjects.length === 0 ? (
+            <div className="text-center py-10 text-muted-foreground">
+              <GraduationCap className="w-8 h-8 mx-auto mb-2 opacity-40" />
+              <p className="text-sm">Nenhuma matéria cadastrada nesta turma.</p>
+              {isLeader && (
+                <Link href="/subjects">
+                  <Button size="sm" variant="outline" className="mt-3">Adicionar matéria</Button>
+                </Link>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {subjects.map(subject => (
+                <motion.div
+                  key={subject.id}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center gap-3 p-3 rounded-xl border bg-card"
+                >
+                  <div
+                    className="w-2.5 h-2.5 rounded-full shrink-0"
+                    style={{ backgroundColor: subject.color }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{subject.name}</p>
+                    {subject.professor && (
+                      <p className="text-xs text-muted-foreground truncate">{subject.professor}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {subject.classStatus === "COMPLETED" ? (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">Concluída</span>
+                    ) : (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">Ativa</span>
+                    )}
+                    <span className="text-xs text-muted-foreground">{subject.hours}h</span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
