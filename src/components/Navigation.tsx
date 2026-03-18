@@ -4,7 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
-import { Home, BookOpen, Calendar, StickyNote, LogOut, Bell, BellOff, Users, FileText, ShieldCheck, Github, MessageCircle } from "lucide-react"
+import { Home, BookOpen, Calendar, StickyNote, LogOut, Bell, BellOff, Users, FileText, ShieldCheck, Github, MessageCircle, Star } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -22,6 +22,7 @@ const baseNavItems = [
   { name: "Agenda", href: "/agenda", icon: Calendar },
   { name: "Notas", href: "/notes", icon: StickyNote },
   { name: "Materiais", href: "/materiais", icon: FileText },
+  { name: "Avaliações", href: "/avaliacoes", icon: Star },
 ]
 
 function UserAvatar({ name }: { name?: string | null }) {
