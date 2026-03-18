@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Users, Plus, Crown, LogIn, ChevronRight, X } from "lucide-react"
+import { Users, Plus, Crown, LogIn, ChevronRight, X, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -279,7 +279,7 @@ function ClassGroupCard({ group, onJoin }: { group: ClassGroup; onJoin: (id: str
 
 export default function TurmasPage() {
   const [showRequest, setShowRequest] = useState(false)
-  const { classGroups, loading, error, fetchClassGroups, joinClassGroup } = useClassGroupStore()
+  const { classGroups, loading, fetchClassGroups, joinClassGroup } = useClassGroupStore()
   const addToast = useToastStore(state => state.addToast)
 
   useEffect(() => {
