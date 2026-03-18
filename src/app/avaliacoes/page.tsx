@@ -38,21 +38,6 @@ const CRITERIA = [
   { key: "avgDificuldade",     label: "Dificuldade" },
 ]
 
-function StarBar({ value, max = 5 }: { value: number; max?: number }) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <div className="flex gap-0.5">
-        {Array.from({ length: max }, (_, i) => (
-          <Star
-            key={i}
-            className={`w-3 h-3 ${i < Math.round(value) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/20"}`}
-          />
-        ))}
-      </div>
-      <span className="text-xs font-medium">{value.toFixed(1)}</span>
-    </div>
-  )
-}
 
 function RatingCard({ rating, onRate }: { rating: SubjectRating; onRate: (r: SubjectRating) => void }) {
   const [expanded, setExpanded] = React.useState(false)
