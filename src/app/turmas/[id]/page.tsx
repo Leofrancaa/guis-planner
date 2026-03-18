@@ -133,7 +133,7 @@ export default function TurmaDetailPage() {
   const [reportTarget, setReportTarget] = useState<ClassGroupMember | null>(null)
 
   const { currentGroup, members, loading, fetchGroup, fetchMembers } = useClassGroupStore()
-  const { user } = useAuthStore()
+  const { user, isPremium } = useAuthStore()
   const addToast = useToastStore(state => state.addToast)
 
   const [subjects, setSubjects] = useState<TurmaSubject[]>([])
@@ -445,7 +445,13 @@ export default function TurmaDetailPage() {
                       size="sm"
                       variant={myRating ? "outline" : "default"}
                       className="shrink-0 gap-1"
-                      onClick={() => setRatingTarget({ subject, existing: myRating })}
+                      onClick={() => {
+                        if (!isPremium()) {
+                          addToast("A avaliação de professores é exclusiva para usuários Premium.", "error")
+                          return
+                        }
+                        setRatingTarget({ subject, existing: myRating })
+                      }}
                     >
                       <Star className="w-3.5 h-3.5" />
                       {myRating ? "Editar" : "Avaliar"}
