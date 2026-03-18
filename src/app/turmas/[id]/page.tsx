@@ -459,8 +459,8 @@ export default function TurmaDetailPage() {
                         {[
                           { label: "Didática",        val: r.avgDidatica,        max: 5 },
                           { label: "Clareza",          val: r.avgClareza,         max: 5 },
-                          { label: "Disponibilidade",  val: r.avgDisponibilidade, max: 4 },
-                          { label: "Pontualidade",     val: r.avgPontualidade,    max: 4 },
+                          { label: "Disponibilidade",  val: r.avgDisponibilidade, max: 5 },
+                          { label: "Pontualidade",     val: r.avgPontualidade,    max: 5 },
                           { label: "Dificuldade",      val: r.avgDificuldade,     max: 5 },
                         ].map(({ label, val, max }) => (
                           <div key={label} className="flex items-center justify-between gap-2">

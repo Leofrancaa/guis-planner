@@ -18,8 +18,8 @@ interface RatingCriterion {
 const CRITERIA: RatingCriterion[] = [
   { key: "didatica",        label: "Didática",        max: 5, description: "Como o professor explica o conteúdo" },
   { key: "clareza",         label: "Clareza",          max: 5, description: "Clareza na comunicação" },
-  { key: "disponibilidade", label: "Disponibilidade",  max: 4, description: "Acessibilidade fora de sala" },
-  { key: "pontualidade",    label: "Pontualidade",     max: 4, description: "Cumprimento de horários" },
+  { key: "disponibilidade", label: "Disponibilidade",  max: 5, description: "Acessibilidade fora de sala" },
+  { key: "pontualidade",    label: "Pontualidade",     max: 5, description: "Cumprimento de horários" },
   { key: "dificuldade",     label: "Dificuldade",      max: 5, description: "Nível de dificuldade da matéria" },
 ]
 
