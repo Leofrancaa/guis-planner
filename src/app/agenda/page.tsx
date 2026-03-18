@@ -48,6 +48,7 @@ export default function AgendaPage() {
   const [date, setDate] = React.useState(format(new Date(), "yyyy-MM-dd"))
   const [type, setType] = React.useState<EventType>("assignment")
   const [scope, setScope] = React.useState<"INDIVIDUAL" | "CLASS">("INDIVIDUAL")
+  const [gradeLabel, setGradeLabel] = React.useState("")
 
   React.useEffect(() => {
     setMounted(true)
@@ -58,7 +59,7 @@ export default function AgendaPage() {
   if (!mounted) return null
 
   const openAddModal = () => {
-    setTitle(""); setSubjectId(""); setDate(format(new Date(), "yyyy-MM-dd")); setType("assignment"); setScope("INDIVIDUAL")
+    setTitle(""); setSubjectId(""); setDate(format(new Date(), "yyyy-MM-dd")); setType("assignment"); setScope("INDIVIDUAL"); setGradeLabel("")
     setDuplicateWarning("")
     setIsModalOpen(true)
   }
@@ -111,7 +112,8 @@ export default function AgendaPage() {
       subjectId: subjectId && subjectId !== "none" ? subjectId : undefined,
       date: new Date(date + "T12:00:00").toISOString(),
       type,
-      scope
+      scope,
+      gradeLabel: gradeLabel || undefined,
     })
     setIsModalOpen(false)
     setDuplicateWarning("")
@@ -286,6 +288,11 @@ export default function AgendaPage() {
                                     {subject.name}
                                   </Badge>
                                 )}
+                                {event.gradeLabel && (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 font-medium">
+                                    {event.gradeLabel}
+                                  </span>
+                                )}
                               </div>
                             </div>
 
@@ -371,6 +378,34 @@ export default function AgendaPage() {
               </SelectContent>
             </Select>
           </div>
+
+          {/* Grade label selector: shown when a subject is selected */}
+          {subjectId && subjectId !== "none" && (() => {
+            const sel = subjects.find(s => s.id === subjectId)
+            const configs = sel?.enrollments?.[0]?.gradeConfigs ?? []
+            if (configs.length === 0) return null
+            return (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Vincular à nota (opcional)</label>
+                <Select value={gradeLabel || "none"} onValueChange={v => setGradeLabel(v === "none" ? "" : v)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="-- Nenhuma --" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">-- Nenhuma --</SelectItem>
+                    {configs.map((gc: { label: string }) => (
+                      <SelectItem key={gc.label} value={gc.label}>{gc.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {gradeLabel && (
+                  <p className="text-xs text-muted-foreground">
+                    Apenas um evento pode ser vinculado a {gradeLabel} nesta matéria.
+                  </p>
+                )}
+              </div>
+            )
+          })()}
 
           {/* Scope selector: only for exam events when user belongs to a class */}
           {type === "exam" && user?.classGroupId && (

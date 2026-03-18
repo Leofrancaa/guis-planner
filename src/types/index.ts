@@ -49,11 +49,12 @@ export interface Event {
   id: string;
   subjectId?: string;
   title: string;
-  date: string; // ISO string 
+  date: string; // ISO string
   type: EventType;
   completed: boolean;
   description?: string;
   scope?: Scope;
+  gradeLabel?: string | null;
 }
 
 export interface Note {

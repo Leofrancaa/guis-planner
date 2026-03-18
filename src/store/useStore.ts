@@ -24,7 +24,7 @@ interface StoreState {
 
   // Events
   fetchEvents: () => Promise<void>;
-  addEvent: (event: { title: string; date: string; type: Event['type']; subjectId?: string; scope?: Scope }) => Promise<void>;
+  addEvent: (event: { title: string; date: string; type: Event['type']; subjectId?: string; scope?: Scope; gradeLabel?: string }) => Promise<void>;
   toggleEventCompletion: (id: string) => Promise<void>;
   deleteEvent: (id: string) => Promise<void>;
 
@@ -153,13 +153,14 @@ export const useStore = create<StoreState>((set, get) => ({
 
   addEvent: async (event) => {
     try {
-      const payload = {
+      const payload: Record<string, unknown> = {
         title: event.title,
         date: event.date,
         type: event.type,
         subjectId: event.subjectId,
-        scope: event.scope || 'INDIVIDUAL'
+        scope: event.scope || 'INDIVIDUAL',
       };
+      if (event.gradeLabel) payload.gradeLabel = event.gradeLabel;
       const newEvent = await fetchApi('/events', {
         method: 'POST',
         body: JSON.stringify(payload)
