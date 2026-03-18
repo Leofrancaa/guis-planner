@@ -19,6 +19,7 @@ import {
   Calculator, AlertTriangle, CheckCircle2, TrendingUp, User, Users,
   Lock, XCircle, Award, Minus, Star
 } from "lucide-react"
+import { RatingModal } from "@/components/RatingModal"
 
 const COLORS = [
   "#ef4444", "#f97316", "#f59e0b", "#84cc16", "#22c55e",
@@ -343,6 +344,7 @@ export default function SubjectsPage() {
   // Leader turmas (for scope selector)
   const [leaderGroups, setLeaderGroups] = React.useState<LeaderGroup[]>([])
   const [selectedGroupId, setSelectedGroupId] = React.useState<string>("")
+  const [ratingSubject, setRatingSubject] = React.useState<Subject | null>(null)
 
   // Form state
   const [name, setName] = React.useState("")
@@ -639,7 +641,7 @@ export default function SubjectsPage() {
                       className="w-full text-xs gap-1.5 h-8 mt-1 border-primary/20 hover:bg-primary/5 text-primary"
                       onClick={() => {
                         if (isPremium()) {
-                          addToast("Avaliação de professores em breve!", "info")
+                          setRatingSubject(subject)
                         } else {
                           addToast("A avaliação de professores é exclusiva para usuários Premium.", "error")
                         }
@@ -780,6 +782,20 @@ export default function SubjectsPage() {
           <GradeConfigModal
             subject={gradeConfigSubject}
             onClose={() => { setGradeConfigSubject(null); fetchSubjects() }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Rating Modal */}
+      <AnimatePresence>
+        {ratingSubject && (
+          <RatingModal
+            subjectId={ratingSubject.id}
+            subjectName={ratingSubject.name}
+            professor={ratingSubject.professor ?? ""}
+            existing={null}
+            onClose={() => setRatingSubject(null)}
+            onSuccess={() => setRatingSubject(null)}
           />
         )}
       </AnimatePresence>
