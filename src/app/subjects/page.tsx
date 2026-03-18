@@ -404,8 +404,7 @@ export default function SubjectsPage() {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
-    const data: Record<string, unknown> = { name, professor, hours: hours ? parseInt(hours) : 60, color, scope }
-    if (scope === "CLASS" && selectedGroupId) data.classGroupId = selectedGroupId
+    const data = { name, professor, hours: hours ? parseInt(hours) : 60, color, scope, classGroupId: scope === "CLASS" && selectedGroupId ? selectedGroupId : undefined }
     if (editingId) {
       updateSubject(editingId, data)
     } else {

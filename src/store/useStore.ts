@@ -17,7 +17,7 @@ interface StoreState {
 
   // Subjects
   fetchSubjects: () => Promise<void>;
-  addSubject: (subject: { name: string; professor: string; color: string; hours?: number; credits?: number; scope?: Scope }) => Promise<void>;
+  addSubject: (subject: { name: string; professor: string; color: string; hours?: number; credits?: number; scope?: Scope; classGroupId?: string }) => Promise<void>;
   updateSubject: (id: string, subject: Partial<Subject> & { credits?: number }) => Promise<void>;
   deleteSubject: (id: string) => Promise<void>;
   updateSubjectTracking: (id: string, tracking: Partial<StudentSubject>) => Promise<void>;
