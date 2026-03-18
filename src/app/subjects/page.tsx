@@ -325,6 +325,8 @@ function GradeConfigModal({
   )
 }
 
+interface LeaderGroup { id: string; name: string }
+
 export default function SubjectsPage() {
   const { subjects, loading, addSubject, updateSubject, deleteSubject, fetchSubjects } = useStore()
   const { isPremium, user } = useAuthStore()
@@ -335,6 +337,10 @@ export default function SubjectsPage() {
   const [editingId, setEditingId] = React.useState<string | null>(null)
   const [trackingSubjectId, setTrackingSubjectId] = React.useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = React.useState<string | null>(null)
+
+  // Leader turmas (for scope selector)
+  const [leaderGroups, setLeaderGroups] = React.useState<LeaderGroup[]>([])
+  const [selectedGroupId, setSelectedGroupId] = React.useState<string>("")
 
   // Form state
   const [name, setName] = React.useState("")
@@ -352,6 +358,16 @@ export default function SubjectsPage() {
   React.useEffect(() => {
     setMounted(true)
     fetchSubjects()
+    // Fetch groups where user is leader
+    fetchApi("/class-groups")
+      .then((groups: { id: string; name: string; myRole?: string }[]) => {
+        if (Array.isArray(groups)) {
+          const leader = groups.filter(g => g.myRole === "LEADER")
+          setLeaderGroups(leader)
+          if (leader.length > 0) setSelectedGroupId(leader[0].id)
+        }
+      })
+      .catch(() => {})
   }, [fetchSubjects])
 
   if (!mounted) return null
@@ -385,7 +401,8 @@ export default function SubjectsPage() {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
-    const data = { name, professor, hours: hours ? parseInt(hours) : 60, color, scope }
+    const data: Record<string, unknown> = { name, professor, hours: hours ? parseInt(hours) : 60, color, scope }
+    if (scope === "CLASS" && selectedGroupId) data.classGroupId = selectedGroupId
     if (editingId) {
       updateSubject(editingId, data)
     } else {
@@ -669,8 +686,8 @@ export default function SubjectsPage() {
             </div>
           </div>
 
-          {/* Scope selector - only shown when user belongs to a class */}
-          {!editingId && user?.classGroupId && (
+          {/* Scope selector - shown when user is leader of at least one turma */}
+          {!editingId && leaderGroups.length > 0 && (
             <div className="space-y-2">
               <label className="text-sm font-medium">Visibilidade</label>
               <Select value={scope} onValueChange={(v) => setScope(v as "INDIVIDUAL" | "CLASS")}>
@@ -687,9 +704,23 @@ export default function SubjectsPage() {
                 </SelectContent>
               </Select>
               {scope === "CLASS" && (
-                <p className="text-xs text-muted-foreground">
-                  A matéria ficará visível para todos da turma. Provas e notas permanecem individuais.
-                </p>
+                <>
+                  {leaderGroups.length > 1 && (
+                    <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a turma" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {leaderGroups.map(g => (
+                          <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    A matéria ficará visível para todos da turma. Provas e notas permanecem individuais.
+                  </p>
+                </>
               )}
             </div>
           )}
