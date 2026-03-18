@@ -329,7 +329,7 @@ interface LeaderGroup { id: string; name: string }
 
 export default function SubjectsPage() {
   const { subjects, loading, addSubject, updateSubject, deleteSubject, fetchSubjects } = useStore()
-  const { isPremium, user } = useAuthStore()
+  const { isPremium } = useAuthStore()
   const [mounted, setMounted] = React.useState(false)
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [isTrackingModalOpen, setIsTrackingModalOpen] = React.useState(false)
