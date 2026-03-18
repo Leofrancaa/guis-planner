@@ -18,6 +18,7 @@ interface ClassSubject {
   professor: string
   color: string
   hours: number
+  classGroupId?: string
   classStatus?: "ACTIVE" | "COMPLETED"
 }
 
@@ -121,7 +122,7 @@ export default function TurmaDetailPage() {
         .then((all: ClassSubject[]) => {
           // The API already filters by membership; just filter for this turma
           if (Array.isArray(all)) {
-            setSubjects(all.filter((s: any) => s.classGroupId === id))
+            setSubjects(all.filter((s: ClassSubject) => s.classGroupId === id))
           }
         })
         .catch(() => {})
