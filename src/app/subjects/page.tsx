@@ -364,7 +364,10 @@ export default function SubjectsPage() {
         if (Array.isArray(groups)) {
           const leader = groups.filter(g => g.myRole === "LEADER")
           setLeaderGroups(leader)
-          if (leader.length > 0) setSelectedGroupId(leader[0].id)
+          if (leader.length > 0) {
+            setSelectedGroupId(leader[0].id)
+            setScope("CLASS") // default to CLASS for leaders
+          }
         }
       })
       .catch(() => {})
@@ -643,6 +646,28 @@ export default function SubjectsPage() {
                       }}
                     >
                       <Star className="w-3 h-3" /> Avaliar Professor
+                    </Button>
+                  )}
+                  {/* Move to turma button for leaders with individual subjects */}
+                  {leaderGroups.length > 0 && !subject.classGroup && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-xs gap-1.5 h-8 mt-1 border-primary/20 hover:bg-primary/5 text-primary"
+                      onClick={async () => {
+                        const groupId = leaderGroups[0].id
+                        try {
+                          await fetchApi(`/subjects/${subject.id}/assign-class`, {
+                            method: "PUT",
+                            body: JSON.stringify({ classGroupId: groupId }),
+                          })
+                          fetchSubjects()
+                        } catch {
+                          alert("Erro ao mover matéria para a turma.")
+                        }
+                      }}
+                    >
+                      <Users className="w-3 h-3" /> Mover para Turma
                     </Button>
                   )}
                 </div>
